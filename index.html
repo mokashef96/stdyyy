@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مختبر المراجعة التفاعلي لمقابلة Amazon BIE — مقسم حسب المواد</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Fira+Code:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        aws: {
+                            dark: '#0b1120',
+                            panel: '#151f32',
+                            orange: '#ff9900',
+                            orangeHover: '#e68a00',
+                            blue: '#00a8e1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0b1120; color: #f1f5f9; }
+        .code-ltr { direction: ltr; text-align: left; font-family: 'Fira Code', monospace; unicode-bidi: embed; }
+        .inline-code {
+            direction: ltr; display: inline-block; font-family: 'Fira Code', monospace;
+            background-color: rgba(15, 23, 42, 0.95); border: 1px solid rgba(51, 65, 85, 0.9);
+            padding: 0.08rem 0.45rem; border-radius: 0.375rem; color: #38bdf8;
+            font-size: 0.82rem; margin: 0 0.12rem; unicode-bidi: embed;
+        }
+        .code-editor-area { tab-size: 4; line-height: 1.65; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ff9900; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-aws-orange selection:text-slate-950">
+
+    <!-- Sticky Header & 8 Subject Navigation Tabs -->
+    <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-aws-orange to-amber-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+                        <i class="fa-brands fa-amazon"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-base sm:text-lg font-black text-white">مختبر Amazon BIE التفاعلي — مقسم حسب كل مادة</h1>
+                            <span class="px-2.5 py-0.5 text-[11px] font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">الشرح أولاً ⬅ ثم السؤال</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">اضغط على أي مادة بالأسفل للانتقال الفوري (Python • SQL • DWH • Statistics • Business • STAR)</p>
+                    </div>
+                </div>
+
+                <!-- Mastery Bar & Retry Button -->
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl px-3.5 py-1.5 flex items-center gap-3">
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-400 font-bold">نسبة الإتقان الكلي</div>
+                            <div class="flex items-center gap-1.5">
+                                <span id="mastery-percent" class="text-sm font-black text-emerald-400">0%</span>
+                                <span id="mastery-counts" class="text-[11px] text-slate-400">(0/69)</span>
+                            </div>
+                        </div>
+                        <div class="w-24 sm:w-32 h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
+                            <div id="mastery-bar" class="h-full bg-gradient-to-l from-emerald-400 to-teal-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="switchTab('retry')" class="px-3.5 py-2 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-red-300 font-extrabold text-xs flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>طابور الإعادة</span>
+                        <span id="retry-badge" class="px-1.5 py-0.5 rounded-full bg-red-600 text-white font-black text-[11px]">0</span>
+                    </button>
+
+                    <button type="button" onclick="openResetModal()" title="تصفير التقدم" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-red-400 border border-slate-800 transition text-xs">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 8 Clean Subject Tabs -->
+            <nav class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center gap-1.5 overflow-x-auto pb-1">
+                <button type="button" onclick="switchTab('notebook')" id="tab-btn-notebook" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-aws-orange text-slate-950 shadow-md">
+                    <span>📓 1. كشكولك + الفيديوهات</span>
+                </button>
+                <button type="button" onclick="switchTab('python')" id="tab-btn-python" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800">
+                    <span>🐍 2. Python & Pandas</span>
+                </button>
+                <button type="button" onclick="switchTab('sql')" id="tab-btn-sql" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800">
+                    <span>🗄️ 3. SQL المتقدم</span>
+                </button>
+                <button type="button" onclick="switchTab('dwh')" id="tab-btn-dwh" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800">
+                    <span>🏗️ 4. Data Warehousing & AWS</span>
+                </button>
+                <button type="button" onclick="switchTab('stats')" id="tab-btn-stats" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800">
+                    <span>📐 5. Statistics & A/B Testing</span>
+                </button>
+                <button type="button" onclick="switchTab('biz')" id="tab-btn-biz" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800">
+                    <span>📊 6. Business & Case Studies</span>
+                </button>
+                <button type="button" onclick="switchTab('star')" id="tab-btn-star" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800">
+                    <span>🌟 7. قصص القيادة STAR</span>
+                </button>
+                <button type="button" onclick="switchTab('retry')" id="tab-btn-retry" class="subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-red-300 hover:bg-slate-800 border border-red-900/40">
+                    <span>🎯 8. طابور الإعادة (<span id="nav-retry-count">0</span>)</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Early Core Navigation Script -->
+    <script>
+        function switchTab(tabKey) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('panel-' + tabKey);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.subject-tab').forEach(btn => {
+                btn.className = "subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-slate-900 text-slate-200 hover:bg-slate-800 border border-slate-800";
+            });
+            const activeBtn = document.getElementById('tab-btn-' + tabKey);
+            if (activeBtn) {
+                activeBtn.className = "subject-tab px-3.5 py-2 rounded-xl font-extrabold text-xs whitespace-nowrap transition flex items-center gap-1.5 bg-aws-orange text-slate-950 shadow-md";
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const colors = {
+                success: 'bg-emerald-950 border-emerald-500 text-emerald-200',
+                warning: 'bg-amber-950 border-amber-500 text-amber-200',
+                error: 'bg-red-950 border-red-500 text-red-200',
+                info: 'bg-slate-900 border-sky-500 text-sky-200'
+            };
+            const div = document.createElement('div');
+            div.className = `px-4 py-3 rounded-2xl border shadow-2xl text-xs font-bold flex items-center gap-2 transition-all ${colors[type] || colors.info}`;
+            div.innerHTML = `<i class="fa-solid fa-bolt"></i><span>${msg}</span>`;
+            container.appendChild(div);
+            setTimeout(() => div.remove(), 3400);
+        }
+
+        function openResetModal() {
+            const m = document.getElementById('reset-confirm-modal');
+            if (m) m.classList.remove('hidden');
+        }
+        function closeResetModal() {
+            const m = document.getElementById('reset-confirm-modal');
+            if (m) m.classList.add('hidden');
+        }
+    </script>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 left-5 z-50 flex flex-col gap-2 max-w-sm"></div>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- ================================================================= -->
+        <!-- TAB 1: NOTEBOOK ANSWERS + 9 VIDEOS SUMMARY + QUICK LAUNCH         -->
+        <!-- ================================================================= -->
+        <section id="panel-notebook" class="tab-panel space-y-6">
+
+            <!-- Quick Topic Switcher & 3-Hour Rescue Plan Banner -->
+            <div class="bg-gradient-to-l from-aws-orange/20 via-slate-900 to-slate-900 border-2 border-aws-orange/60 rounded-3xl p-5 shadow-xl space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <span class="px-3 py-1 rounded-full bg-aws-orange text-slate-950 text-xs font-black">⚡ بوابتك السريعة للمواد الـ 7 + خطة ليلة المقابلة</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-white mt-1.5">كل مادة مفصولة بالكامل في تبويب مستقل — اضغط على أي بطاقة للانتقال فوراً:</h2>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                    <button type="button" onclick="switchTab('python')" class="p-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-amber-500/40 text-right transition group">
+                        <div class="text-amber-400 font-black text-xs">🐍 Python & Pandas</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">الشرح + 11 Param + 15 كود</div>
+                    </button>
+                    <button type="button" onclick="switchTab('sql')" class="p-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-sky-500/40 text-right transition group">
+                        <div class="text-sky-400 font-black text-xs">🗄️ SQL المتقدم</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">الـ Format + 7 Param + 9 مسائل</div>
+                    </button>
+                    <button type="button" onclick="switchTab('dwh')" class="p-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-emerald-500/40 text-right transition group">
+                        <div class="text-emerald-400 font-black text-xs">🏗️ DWH & Spark & AWS</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">10 وحدات (الشرح ⬅ السؤال)</div>
+                    </button>
+                    <button type="button" onclick="switchTab('stats')" class="p-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-purple-500/40 text-right transition group">
+                        <div class="text-purple-400 font-black text-xs">📐 Statistics & A/B</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">5 وحدات (الشرح ⬅ السؤال)</div>
+                    </button>
+                    <button type="button" onclick="switchTab('biz')" class="p-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-pink-500/40 text-right transition group">
+                        <div class="text-pink-400 font-black text-xs">📊 Business & Cases</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">6 وحدات (Dashboards + كيس)</div>
+                    </button>
+                    <button type="button" onclick="switchTab('star')" class="p-3 rounded-2xl bg-slate-950 hover:bg-slate-800 border border-teal-500/40 text-right transition group">
+                        <div class="text-teal-400 font-black text-xs">🌟 قصص القيادة STAR</div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">6 قصص جاهزة + سؤال الفشل</div>
+                    </button>
+                </div>
+
+                <!-- 3-Hour Night-Before Study Plan -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div class="flex items-start gap-2.5">
+                        <span class="px-2 py-1 rounded-lg bg-sky-500/20 text-sky-300 font-black">الساعة 1</span>
+                        <div>
+                            <div class="font-black text-white">SQL هو الخبز والزبدة (Julie [01:32])</div>
+                            <p class="text-slate-400 mt-0.5">راجع الـ Format الذهبي + حل الـ 9 مسائل في تبويب <strong>SQL المتقدم</strong>.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black">الساعة 2</span>
+                        <div>
+                            <div class="font-black text-white">DWH + Statistics + Business</div>
+                            <p class="text-slate-400 mt-0.5">اقرأ صندوق الشرح أولاً ثم اختر الـ 4 نقاط الصحيحة في تبويبات <strong>4 و 5 و 6</strong>.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-black">الساعة 3</span>
+                        <div>
+                            <div class="font-black text-white">قصص STAR الـ 6 + Python السريع</div>
+                            <p class="text-slate-400 mt-0.5">تأكد من حفظ أرقام قصصك الـ 6 + حل الـ 11 Parameter وتمرين Code Review في <strong>Python</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direct Answers to Your Handwritten Notebook -->
+            <div class="bg-aws-panel border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="px-3 py-1 rounded-full bg-aws-orange/20 text-aws-orange text-xs font-black">📓 إجابات الأسئلة الـ 6 المكتوبة بخط يدك في الكشكول</span>
+                    <h3 class="text-xl font-black text-white mt-1.5">حل كل نقطة كتبتها في ورقتك باختصار ووضوح تام</h3>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-aws-orange text-sm">1️⃣ "distinct in SQL لو بعملها محتاج GROUP BY ولا لا؟"</h4>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-bold">لا تحتاج أبداً!</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • <strong>القاعدة:</strong> لاستخراج القيم الفريدة بدون تكرار نكتب <span class="inline-code">SELECT DISTINCT cust_id FROM orders;</span> <strong>بدون <span class="inline-code">GROUP BY</span> نهائياً</strong>.<br>
+                            • لا نكتب <span class="inline-code">GROUP BY</span> إلا لو كنا نحسب دالة تجميعية بجانب العمود مثل <span class="inline-code">SUM(price)</span> أو <span class="inline-code">COUNT(*)</span> أو نفلتر المجموعات بـ <span class="inline-code">HAVING</span>.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-sky-400 text-sm">2️⃣ "Chunk فشخة — إيه هي Groupby(level=0)؟"</h4>
+                            <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[11px] font-bold">تجميع على الـ Index</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • عند كتابة <span class="inline-code">chunk.groupby('category')['price'].sum()</span> داخل اللوب، تتحول <span class="inline-code">category</span> إلى <strong>Index (المستوى 0)</strong>، لذا عند جمع الدفعات نكتب <span class="inline-code">groupby(level=0).sum()</span> أي "اجمع كل الأرقام التي لها نفس الـ Index".<br>
+                            • <strong>البديل الأسهل بدون <span class="inline-code">level=0</span>:</strong> ضع <span class="inline-code">as_index=False</span> داخل اللوب وفي النهاية اجمع بـ <span class="inline-code">groupby('category', as_index=False)['price'].sum()</span>.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-emerald-400 text-sm">3️⃣ "INTERSECT والفرق بينها وبين INNER JOIN؟"</h4>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-bold">عمودي vs أفقي</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • <span class="inline-code">INNER JOIN</span> يربط أعمدة جدولين <strong>أفقياً</strong> ويكرر الصفوف لو المفتاح مكرر (<span class="inline-code">M × N</span>) ولا يطابق <span class="inline-code">NULL</span>.<br>
+                            • <span class="inline-code">INTERSECT</span> يقارن نتائج استعلامين <strong>عمودياً</strong>، <strong>ويحذف التكرارات تلقائياً</strong>، ويعتبر <span class="inline-code">NULL = NULL</span> متطابقين.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-purple-400 text-sm">4️⃣ "EXCEPT والفرق بينها وبين LEFT JOIN؟"</h4>
+                            <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[11px] font-bold">عملاء التوقف Churn</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • <span class="inline-code">EXCEPT</span> يطرح الاستعلام الثاني من الأول عمودياً ويحذف التكرارات.<br>
+                            • <span class="inline-code">LEFT JOIN ... WHERE right.id IS NULL</span> (ويسمى Anti-Join) يسمح بعرض أي أعمدة من الجدول الأول بحرية وغالباً أسرع على المفاتيح المفهرسة.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-amber-400 text-sm">5️⃣ "NTILE in Window Functions إيه وظيفتها؟"</h4>
+                            <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[11px] font-bold">تقسيم لشرائح متساوية</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • <span class="inline-code">NTILE(4) OVER (ORDER BY spend DESC)</span> تقسم العملاء المرتبين إلى <strong>4 شرائح متساوية (كل شريحة 25%)</strong> وتأخذ أرقاماً من 1 إلى 4 (الشريحة 1 هي الـ VIP الأعلى إنفاقاً).
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-rose-400 text-sm">6️⃣ "الفرق بين UNBOUNDED PRECEDING و N PRECEDING؟"</h4>
+                            <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[11px] font-bold">تراكمي vs متحرك</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • <span class="inline-code">UNBOUNDED PRECEDING</span> يبدأ دائماً من <strong>أول صف في المجموعة</strong> (للمجموع التراكمي Running Total).<br>
+                            • <span class="inline-code">2 PRECEDING</span> يأخذ فقط <strong>الصفين السابقين + الصف الحالي</strong> (للمتوسط المتحرك Moving Average لـ 3 صفوف).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary of All 9 Videos & Julie's Official Prep Video -->
+            <div class="bg-aws-panel border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div class="border-b border-slate-800 pb-3">
+                    <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-black"><i class="fa-brands fa-youtube"></i> خلاصة الفيديوهات الـ 9 التي أرسلتها (موزعة داخل أقسامها المخصصة)</span>
+                    <h3 class="text-xl font-black text-white mt-1.5">أهم أسرار المقابلة من الفيديوهات (اضغط على أي بطاقة للذهاب لقسمها مباشرةً)</h3>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <div onclick="switchTab('python')" class="cursor-pointer bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-aws-orange rounded-2xl p-4 space-y-2 transition">
+                        <div class="font-black text-aws-orange">🎬 1. فيديو Julie الرسمي (Jy_kUcZf0Mg) ⬅ اضغط للفتح</div>
+                        <p class="text-slate-300 leading-relaxed">
+                            • <strong>SQL هو الخبز والزبدة:</strong> لا تستخدم CTE أو Window Function للاستعراض بل عند الحاجة فقط.<br>
+                            • <strong>مفاجأة Python المريحة:</strong> المطلوب مراجعة كود واكتشاف الأخطاء (Code Review) أو كتابة Pseudocode.<br>
+                            • <strong>الإحصاء والرسوم:</strong> راجع Regression Models واختيار الرسم البياني لمدير (Line vs Bar vs Box Plot).
+                        </p>
+                    </div>
+
+                    <div onclick="switchTab('sql')" class="cursor-pointer bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-sky-400 rounded-2xl p-4 space-y-2 transition">
+                        <div class="font-black text-sky-400">🎬 2. فيديو مسألة SQL الحضور والغياب (d7pZNZbpdo8) ⬅ اضغط للفتح</div>
+                        <p class="text-slate-300 leading-relaxed">
+                            • تجميع التواريخ المتتالية لنفس الحالة (<span class="inline-code">PRESENT / ABSENT</span>) في نطاق <span class="inline-code">from_date, to_date</span>.<br>
+                            • <strong>الحيلة:</strong> طرح اثنين <span class="inline-code">ROW_NUMBER()</span> لتوليد رقم مجموعة ثابت لكل فترة متتالية! (موجودة في <strong>قسم SQL — المسألة 8</strong>).
+                        </p>
+                    </div>
+
+                    <div onclick="switchTab('biz')" class="cursor-pointer bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-emerald-400 rounded-2xl p-4 space-y-2 transition">
+                        <div class="font-black text-emerald-400">🎬 3. فيديو المنتجات المكررة (5ZaYUgPxs_w) ⬅ اضغط للفتح</div>
+                        <p class="text-slate-300 leading-relaxed">
+                            • كيف تدمج منتجات مكررة بدون SKU (مثل "iPhone X" و"Apple iPhone 10")؟<br>
+                            • <strong>الحل:</strong> 1) Blocking بالفئة والسعر، 2) تشابه النصوص (TF-IDF / Cosine) والصور، 3) Threshold فوق 95% دمج آلي. (موجودة في <strong>قسم Business — الوحدة 3</strong>).
+                        </p>
+                    </div>
+
+                    <div onclick="switchTab('biz')" class="cursor-pointer bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-purple-400 rounded-2xl p-4 space-y-2 transition">
+                        <div class="font-black text-purple-400">🎬 4. فيديو مؤشرات الإدارة العليا (aoO_JbYLz1U) ⬅ اضغط للفتح</div>
+                        <p class="text-slate-300 leading-relaxed">
+                            • كيف تحدد وترتب Executive Metrics لأمازون؟<br>
+                            • قسّمها حسب قمع العميل وعجلة أمازون (Acquisition ➔ Retention/Prime ➔ Monetization GMV ➔ Fulfillment SLA)، ثم اختر 3 مؤشرات (North Star + Driver + Guardrail). (في <strong>قسم Business — الوحدة 4</strong>).
+                        </p>
+                    </div>
+
+                    <div onclick="switchTab('dwh')" class="cursor-pointer bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-amber-400 rounded-2xl p-4 space-y-2 transition">
+                        <div class="font-black text-amber-400">🎬 5. فيديو دقة تقارير الـ BI (ScSPGGRDQks) ⬅ اضغط للفتح</div>
+                        <p class="text-slate-300 leading-relaxed">
+                            • كيف تضمن دقة لوحة التحكم 100%؟<br>
+                            • 1) مطابقة الإجماليات مع المصدر (Source Reconciliation)، 2) فحص عدم تضاعف الصفوف بعد الـ Join (Fan-out)، 3) بوابات فحص آلية لعدد الصفوف والـ NULLs. (في <strong>قسم DWH — الوحدة 7</strong>).
+                        </p>
+                    </div>
+
+                    <div onclick="switchTab('star')" class="cursor-pointer bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-teal-400 rounded-2xl p-4 space-y-2 transition">
+                        <div class="font-black text-teal-400">🎬 6. فيديو الـ 13 سؤال السلوكية (L-WXnYv1to4) ⬅ اضغط للفتح</div>
+                        <p class="text-slate-300 leading-relaxed">
+                            • يغطي الأسئلة الحتمية: <strong>"احكِ عن مرة فشلت فيها (Failure Story)"</strong>، <strong>"العمل بدون بيانات كافية (قاعدة 70%)"</strong>، و<strong>"Why Amazon?"</strong>. (موجودة بالكامل في <strong>قسم قصص STAR — الوحدتان 5 و 6</strong>).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 2: PYTHON & PANDAS (الشرح + Parameters + الأسئلة + القوالب 5)  -->
+        <!-- ================================================================= -->
+        <section id="panel-python" class="tab-panel hidden space-y-8">
+
+            <div class="bg-gradient-to-l from-amber-500/20 via-slate-900 to-slate-900 border border-amber-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black">🐍 القسم المستقل الأول: PYTHON & PANDAS</span>
+                <h2 class="text-2xl font-black text-white mt-2">كل ما يخص Python في مكان واحد: 1) الشرح البصري ⬅ 2) الـ Parameters ⬅ 3) المحرر الفارغ والقوالب الـ 5</h2>
+            </div>
+
+            <!-- 1. Python Learn & Visualize -->
+            <div class="bg-aws-panel border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+                <h3 class="text-lg font-black text-aws-orange border-b border-slate-800 pb-3">📖 أولاً: الشرح التأسيسي والتشبيه البصري (Lambda + Vectorization + Automation)</h3>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Lambda Story -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                        <h4 class="font-extrabold text-amber-400 text-sm">💡 1. دالة Lambda (عامل الدليفري المؤقت بدون اسم)</h4>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • الدالة العادية <span class="inline-code">def</span> موظف دائم يحتاج اسماً وكلمة <span class="inline-code">return</span>.<br>
+                            • أما <span class="inline-code">lambda x: x * 2</span> فهي عامل دليفري مؤقت في سطر واحد: يستلم الصندوق <span class="inline-code">x</span> قبل النقطتين، ويسلم الناتج بعد النقطتين تلقائياً بدون <span class="inline-code">return</span>.
+                        </p>
+                        <div class="pt-2 space-y-2">
+                            <div class="text-xs font-bold text-white">ماذا يدخل داخل الصندوق <span class="inline-code">x</span> في Pandas؟ (اضغط للتجربة):</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button type="button" onclick="setLambdaState(1)" id="lambda-btn-1" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-aws-orange text-slate-950">1. خلية (Scalar)</button>
+                                <button type="button" onclick="setLambdaState(2)" id="lambda-btn-2" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300">2. سلة مجموعة (Series)</button>
+                                <button type="button" onclick="setLambdaState(3)" id="lambda-btn-3" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300">3. صف كامل (Row)</button>
+                            </div>
+                            <div id="lambda-inspector-content" class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Vectorization & np.select -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                        <h4 class="font-extrabold text-emerald-400 text-sm">⚡ 2. الـ Vectorization ودالتا np.where و np.select</h4>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            • <strong>لماذا Vectorization أسرع 100 مرة من for loop و apply؟</strong> لأن بايثون العادي يفحص نوع كل خلية على حدة (Dynamic Typing Overhead)، بينما NumPy يخزن العمود ككتلة متجاورة في الـ RAM بلغة C (Contiguous Memory) وينفذ الشرط على ملايين الأرقام في نبضة واحدة.<br>
+                            • <strong>دالة <span class="inline-code">np.where(cond, true_val, false_val)</span>:</strong> لشرط واحد (بديل IF/ELSE).<br>
+                            • <strong>دالة <span class="inline-code">np.select(condlist, choicelist, default='...')</span>:</strong> لعدة شروط مرتبة من الأعلى للأسفل (Short-Circuiting: نضع <span class="inline-code">isna()</span> أولاً)، ولا تنسَ <span class="inline-code">default</span> حتى لا يضع <span class="inline-code">0</span> افتراضياً!
+                        </p>
+                        <pre class="code-ltr bg-slate-900 p-3 rounded-xl text-xs text-amber-300 overflow-x-auto"><code>conditions = [df['price'].isna(), (df['price'] >= 1000) & (df['status'] == 'Delivered')]
+choices = ['Missing', 'VIP']
+df['tier'] = np.select(conditions, choices, default='Standard')</code></pre>
+                    </div>
+                </div>
+
+                <!-- 3 Python Automation Patterns -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="text-xs font-extrabold text-amber-400">1️⃣ دمج الملفات اليومية أوتوماتيكياً (glob)</div>
+                        <pre class="code-ltr bg-slate-900 p-2.5 rounded-xl text-xs text-emerald-300 overflow-x-auto"><code>import glob
+files = glob.glob('data/orders_*.csv')
+df = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)</code></pre>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="text-xs font-extrabold text-sky-400">2️⃣ قراءة ملف 20GB بدفعات (chunksize)</div>
+                        <pre class="code-ltr bg-slate-900 p-2.5 rounded-xl text-xs text-emerald-300 overflow-x-auto"><code>chunks = []
+for chunk in pd.read_csv('huge.csv', chunksize=100000):
+    chunks.append(chunk.dropna(subset=['price']).groupby('category')['price'].sum())
+final_res = pd.concat(chunks).groupby(level=0).sum()</code></pre>
+                    </div>
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+                        <div class="text-xs font-extrabold text-purple-400">3️⃣ الفحص الدفاعي ضد Schema Drift</div>
+                        <pre class="code-ltr bg-slate-900 p-2.5 rounded-xl text-xs text-emerald-300 overflow-x-auto"><code>required_cols = {'order_id', 'cust_id', 'price'}
+if not required_cols.issubset(df.columns):
+    raise ValueError("Missing required columns!")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Python Parameter Micro-Drills (11 Drills) -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-black text-sky-400">🧩 ثانياً: تحدي الـ Parameters الحرجة في Python & Pandas (11 تمرين سريع)</h3>
+                <div id="python-drills-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 3. Python Cold-Write Editor (Focused + 5 Master Templates) -->
+            <div class="space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <div>
+                        <h3 class="text-lg font-black text-emerald-400">💻 ثالثاً: المحرر الفارغ لتمارين Python (الأسئلة المقسمة + القوالب الـ 5 الشاملة)</h3>
+                        <p class="text-xs text-slate-400">اختر بين الأسئلة المركزة القصيرة أو القوالب الـ 5 المجمعة التي طلبت مراجعتها في كشكولك:</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="filterPythonCW('ALL')" data-pycat="ALL" class="py-cw-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-aws-orange text-slate-950">الكل (15)</button>
+                        <button type="button" onclick="filterPythonCW('MASTER5')" data-pycat="MASTER5" class="py-cw-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40">🏆 القوالب الـ 5 الشاملة (5)</button>
+                        <button type="button" onclick="filterPythonCW('FOCUSED')" data-pycat="FOCUSED" class="py-cw-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300">🎯 الأسئلة المقسمة + Code Review (10)</button>
+                    </div>
+                </div>
+                <div id="python-cw-container" class="space-y-5"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 3: ADVANCED SQL (الشرح + الـ Format الذهبي + Parameters + مسائل) -->
+        <!-- ================================================================= -->
+        <section id="panel-sql" class="tab-panel hidden space-y-8">
+
+            <div class="bg-gradient-to-l from-sky-500/20 via-slate-900 to-slate-900 border border-sky-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-sky-500/20 text-sky-300 text-xs font-black">🗄️ القسم المستقل الثاني: ADVANCED SQL</span>
+                <h2 class="text-2xl font-black text-white mt-2">الخبز والزبدة لمقابلة أمازون: 1) الشرح والـ Format الذهبي ⬅ 2) تحدي الدوال ⬅ 3) مسائل المقابلات (9 مسائل)</h2>
+            </div>
+
+            <!-- 1. SQL Learn & Golden Format -->
+            <div class="bg-aws-panel border border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+                <h3 class="text-lg font-black text-sky-400 border-b border-slate-800 pb-3">📖 أولاً: الشرح التأسيسي + الـ Format المنهجي لحل أي سؤال SQL بدون تعطل</h3>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                        <div class="font-black text-amber-400">1️⃣ دوال الترتيب مع التعادل <span class="inline-code">[500, 500, 400]</span> + دالة <span class="inline-code">NTILE</span>:</div>
+                        <ul class="list-disc pr-5 space-y-1">
+                            <li><span class="inline-code">ROW_NUMBER()</span> ⬅ <span class="inline-code">(1, 2, 3)</span> لحذف التكرارات (<span class="inline-code">WHERE rn = 1</span>).</li>
+                            <li><span class="inline-code">RANK()</span> ⬅ <span class="inline-code">(1, 1, 3)</span> تقفز عن الرقم 2.</li>
+                            <li><span class="inline-code">DENSE_RANK()</span> ⬅ <span class="inline-code">(1, 1, 2)</span> بدون قفز (<strong>الصحيحة دائماً لثاني أو ثالث أعلى سعر</strong>).</li>
+                            <li><span class="inline-code">NTILE(4)</span> ⬅ تقسم العملاء إلى 4 شرائح متساوية (Quartiles 25%).</li>
+                        </ul>
+
+                        <div class="font-black text-sky-400 pt-2">2️⃣ إطارات النوافذ (<span class="inline-code">ROWS BETWEEN</span> vs <span class="inline-code">RANGE</span>):</div>
+                        <ul class="list-disc pr-5 space-y-1">
+                            <li><span class="inline-code">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</span>: للمجموع التراكمي من أول صف.</li>
+                            <li><span class="inline-code">ROWS BETWEEN 2 PRECEDING AND CURRENT ROW</span>: للمتوسط المتحرك لآخر 3 صفوف.</li>
+                            <li>نكتب دائماً <span class="inline-code">ROWS BETWEEN</span> صراحةً لأن <span class="inline-code">RANGE</span> الافتراضية تدمج التواريخ المتعادلة!</li>
+                        </ul>
+
+                        <div class="font-black text-emerald-400 pt-2">3️⃣ عمليات المجموعات وفخاخ الـ Joins:</div>
+                        <ul class="list-disc pr-5 space-y-1">
+                            <li><span class="inline-code">UNION ALL</span> أسرع لأنه لا يفحص التكرار؛ <span class="inline-code">INTERSECT</span> للمشترك؛ <span class="inline-code">EXCEPT</span> للمتوقفين (Churn).</li>
+                            <li><strong>فخ Fan-out:</strong> لا تدمج جدولين بعلاقة 1-to-Many قبل تجميع الجدول الفرعي في CTE أولاً!</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-2xl p-5 space-y-3">
+                        <div class="font-black text-aws-orange text-sm">🧭 الـ Format الثابت ذو الـ 3 طبقات CTE (امشِ عليه في كل سؤال SQL):</div>
+                        <pre class="code-ltr bg-slate-900 p-3.5 rounded-xl border border-slate-800 text-xs text-emerald-300 overflow-x-auto leading-relaxed"><code>-- خطوة 1: حدد وحدة الصف (Grain) + اجمع الجداول الفرعية لمنع المضاعفة
+WITH clean_base AS (
+    SELECT cust_id, category, order_date, COALESCE(price, 0) AS price
+    FROM orders
+    WHERE order_date >= '2026-01-01' AND order_date < '2027-01-01'
+),
+-- خطوة 2: حسابات النوافذ (DENSE_RANK / LAG / SUM OVER)
+enriched_data AS (
+    SELECT cust_id, category, price,
+           DENSE_RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rnk
+    FROM clean_base
+)
+-- خطوة 3: الفلترة النهائية والترتيب
+SELECT cust_id, category, price
+FROM enriched_data
+WHERE rnk <= 3;</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SQL Micro-Drills (7 Drills) -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-black text-amber-400">🧩 ثانياً: تحدي دوال وإطارات SQL السريع (7 تمارين)</h3>
+                <div id="sql-drills-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- 3. SQL Cold-Write Problems (9 Real Amazon SQL Problems) -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-black text-emerald-400">💻 ثالثاً: المحرر الفارغ لمسائل SQL الرسمية في أمازون + مسألة الفيديو (9 مسائل)</h3>
+                <div id="sql-cw-container" class="space-y-5"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 4: DATA WAREHOUSING, SPARK & AWS (الشرح أولاً ثم السؤال - 10)   -->
+        <!-- ================================================================= -->
+        <section id="panel-dwh" class="tab-panel hidden space-y-6">
+            <div class="bg-gradient-to-l from-emerald-500/20 via-slate-900 to-slate-900 border border-emerald-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black">🏗️ القسم المستقل الثالث: DATA WAREHOUSING • ETL • SPARK • AWS</span>
+                <h2 class="text-2xl font-black text-white mt-2">هندسة البيانات (10 وحدات): اقرأ الشرح التأسيسي الكامل أولاً ⬅ ثم أجب عن سؤال المحاور لاختبار فهمك</h2>
+            </div>
+            <div id="dwh-cards-container" class="space-y-6"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 5: STATISTICS, A/B TESTING & REGRESSION (الشرح أولاً ثم السؤال) -->
+        <!-- ================================================================= -->
+        <section id="panel-stats" class="tab-panel hidden space-y-6">
+            <div class="bg-gradient-to-l from-purple-500/20 via-slate-900 to-slate-900 border border-purple-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-black">📐 القسم المستقل الرابع: STATISTICS • A/B TESTING • REGRESSION</span>
+                <h2 class="text-2xl font-black text-white mt-2">الإحصاء وتجارب A/B Testing ونماذج الانحدار (5 وحدات مفصلة): الشرح التأسيسي من الصفر أولاً ⬅ ثم اختبار الفهم</h2>
+            </div>
+            <div id="stats-cards-container" class="space-y-6"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 6: BUSINESS, DASHBOARDS & CASE STUDIES (الشرح أولاً ثم السؤال)  -->
+        <!-- ================================================================= -->
+        <section id="panel-biz" class="tab-panel hidden space-y-6">
+            <div class="bg-gradient-to-l from-pink-500/20 via-slate-900 to-slate-900 border border-pink-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-pink-500/20 text-pink-300 text-xs font-black">📊 القسم المستقل الخامس: DASHBOARDS • DAX • AMAZON CASE STUDIES</span>
+                <h2 class="text-2xl font-black text-white mt-2">تصميم اللوحات، التحقيق في هبوط المبيعات، وكيس ستادي الفيديوهات (6 وحدات): الشرح أولاً ⬅ ثم السؤال</h2>
+            </div>
+            <div id="biz-cards-container" class="space-y-6"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 7: AMAZON LEADERSHIP PRINCIPLES (STAR) & 98% QUESTIONS        -->
+        <!-- ================================================================= -->
+        <section id="panel-star" class="tab-panel hidden space-y-6">
+            <div class="bg-gradient-to-l from-teal-500/20 via-slate-900 to-slate-900 border border-teal-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-black">🌟 القسم المستقل السادس: AMAZON LEADERSHIP PRINCIPLES (STAR)</span>
+                <h2 class="text-2xl font-black text-white mt-2">قصصك الـ 6 الكاملة بالأرقام + قصة الفشل (Failure Story) + Why Amazon: اقرأ القصة أولاً ⬅ ثم اختبر تذكرك لأركانها</h2>
+            </div>
+            <div id="star-cards-container" class="space-y-6"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- TAB 8: AUTO-RETRY QUEUE (طابور الإعادة الذكي)                      -->
+        <!-- ================================================================= -->
+        <section id="panel-retry" class="tab-panel hidden space-y-6">
+            <div class="bg-gradient-to-l from-red-500/20 via-slate-900 to-slate-900 border border-red-500/40 rounded-3xl p-6 shadow-xl">
+                <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-black">🎯 القسم السابع: AUTO-RETRY QUEUE</span>
+                <h2 class="text-2xl font-black text-white mt-2">طابور الإعادة الذكي (لتحقيق إتقان 100% غيباً قبل المقابلة)</h2>
+                <p class="text-sm text-slate-300 mt-1">أي تمرين أو سؤال ضغطت فيه على <strong>"إظهار الحل"</strong> في أي قسم يتجمع هنا تلقائياً لتعيد تسميعه غيباً.</p>
+            </div>
+            <div id="retry-queue-container" class="space-y-4"></div>
+        </section>
+
+    </main>
+
+    <!-- Cold Retry Modal -->
+    <div id="cold-retry-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-aws-panel border-2 border-aws-orange rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full bg-aws-orange/20 text-aws-orange text-xs font-black">اختبار التسميع الغيبي للتحرير من الطابور</span>
+                    <h3 id="modal-title" class="text-base sm:text-lg font-black text-white"></h3>
+                </div>
+                <button type="button" onclick="closeRetryModal()" class="text-slate-400 hover:text-white text-lg px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="modal-body" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- Custom Reset Confirmation Modal -->
+    <div id="reset-confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-aws-panel border border-red-500/50 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-black text-white">تأكيد تصفير التقدم بالكامل</h3>
+            <p class="text-xs sm:text-sm text-slate-300">هل تريد تصفير عداد الإتقان وإفراغ طابور الإعادة للبدء من جديد؟</p>
+            <div class="flex items-center gap-3 pt-2">
+                <button type="button" onclick="confirmResetAll()" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs transition">نعم، صفّر التقدم</button>
+                <button type="button" onclick="closeResetModal()" class="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content & Interactive Logic Script -->
+    <script>
+        const lambdaStates = {
+            1: {
+                title: "الحالة الأولى (خلية واحدة Scalar): مع Series.apply",
+                code: "df['order_id'].apply(lambda x: x.split('-')[1])",
+                boxContent: "'ORD-101' (نص خلية واحدة فقط)",
+                outputContent: "'101'",
+                explanation: "يدخل في الصندوق x قيمة خلية واحدة فقط في كل مرة، فيقص النص عند '-' ويأخذ الجزء الثاني."
+            },
+            2: {
+                title: "الحالة الثانية (سلة مجموعة كاملة Series): مع groupby + transform",
+                code: "df.groupby('category')['price'].transform(lambda x: x.max() - x.min())",
+                boxContent: "Series([400, 1200, 2000]) (كل أسعار الفئة معاً)",
+                outputContent: "1600 (أمام كل صف في نفس الفئة)",
+                explanation: "يدخل في الصندوق x عمود فرعي كامل يضم كل أسعار تلك الفئة معاً، فنحسب المدى السعري للفئة."
+            },
+            3: {
+                title: "الحالة الثالثة (صف كامل Row): مع df.apply(..., axis=1)",
+                code: "df.apply(lambda row: row['price'] * row['qty'], axis=1)",
+                boxContent: "Row(price=500, qty=3) (صف كامل)",
+                outputContent: "1500",
+                explanation: "يدخل صف كامل، لكن نتجنبها في المقابلات لأنها بطيئة ونستبدلها بضرب الأعمدة مباشرة df['price'] * df['qty']."
+            }
+        };
+
+        function setLambdaState(st) {
+            [1, 2, 3].forEach(n => {
+                const b = document.getElementById('lambda-btn-' + n);
+                if (b) {
+                    b.className = (n === st)
+                        ? "px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-aws-orange text-slate-950"
+                        : "px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300";
+                }
+            });
+            const d = lambdaStates[st];
+            const box = document.getElementById('lambda-inspector-content');
+            if (!box || !d) return;
+            box.innerHTML = `
+                <div class="text-xs font-black text-amber-300">${d.title}</div>
+                <pre class="code-ltr bg-slate-950 p-2.5 rounded-xl text-xs text-sky-300 overflow-x-auto"><code>${d.code}</code></pre>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800"><span class="text-slate-400">داخل x:</span> <span class="code-ltr text-amber-300 font-bold">${d.boxContent}</span></div>
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800"><span class="text-slate-400">الناتج:</span> <span class="code-ltr text-emerald-300 font-bold">${d.outputContent}</span></div>
+                </div>
+                <p class="text-xs text-slate-300">${d.explanation}</p>
+            `;
+        }
+
+        // 18 Micro-Drills (11 Python + 7 SQL)
+        const microDrills = [
+            { id: "md_py1", subject: "PYTHON", title: "1. تأمين البحث النصي ضد القيم الفارغة (NaN)", question: "نريد فلترة الطلبات التي يحتوي عمود tags فيها على 'fragile' مع تحويل أي NaN إلى False لمنع تعطل الكود:", codeBefore: "df['tags'].str.contains('fragile', ", codeAfter: ")", accepted: ["na=False", "na = False"], options: ["na=False", "dropna=True", "fillna=False", "case=True"], explanation: "الباراميتر na=False يحول القيم الفارغة إلى False فوراً فلا يتعطل الفلتر." },
+            { id: "md_py2", subject: "PYTHON", title: "2. تحديد الأعمدة عند حذف التكرار أو الفراغ", question: "لحذف الطلبات المكررة بناءً على عمود 'order_id' فقط:", codeBefore: "df.drop_duplicates(", codeAfter: ", keep='first')", accepted: ["subset=['order_id']", 'subset=["order_id"]', "subset='order_id'"], options: ["subset=['order_id']", "by=['order_id']", "on=['order_id']", "cols=['order_id']"], explanation: "نستخدم subset=['order_id'] داخل drop_duplicates و dropna لتحديد الأعمدة المستهدفة." },
+            { id: "md_py3", subject: "PYTHON", title: "3. الاحتفاظ بأول سجل عند حذف التكرار", question: "للاحتفاظ بأول ظهور للطلب وحذف التكرارات اللاحقة:", codeBefore: "df.drop_duplicates(subset=['order_id'], ", codeAfter: ")", accepted: ["keep='first'", 'keep="first"'], options: ["keep='first'", "first=True", "mode='first'", "take='first'"], explanation: "keep='first' يحتفظ بأول ظهور، و keep='last' بالأخير." },
+            { id: "md_py4", subject: "PYTHON", title: "4. إبقاء عمود التجميع كعمود عادي بدلاً من Index", question: "عند التجميع بـ groupby، نريد إبقاء 'cust_id' كعمود عادي:", codeBefore: "df.groupby('cust_id', ", codeAfter: ").agg(total=('price', 'sum'))", accepted: ["as_index=False", "as_index = False"], options: ["as_index=False", "index=False", "reset_index=True", "keep_index=False"], explanation: "as_index=False يمنع تحول عمود التجميع إلى Index." },
+            { id: "md_py5", subject: "PYTHON", title: "5. كشف السجلات غير المتطابقة أثناء الدمج (merge)", question: "لإضافة عمود _merge يوضح مصدر كل صف (both أو left_only):", codeBefore: "pd.merge(df, sellers_df, on='seller_id', how='left', ", codeAfter: ")", accepted: ["indicator=True", "indicator = True"], options: ["indicator=True", "track=True", "source=True", "show_merge=True"], explanation: "indicator=True يضيف عمود _merge لكشف الصفوف اليتيمة." },
+            { id: "md_py6", subject: "PYTHON", title: "6. منع ظهور NaN في بداية المتوسط المتحرك (rolling)", question: "لحساب المتوسط المتحرك منذ أول صف دون انتظار اكتمال الـ window:", codeBefore: "df['qty'].rolling(window=3, ", codeAfter: ").mean()", accepted: ["min_periods=1", "min_periods = 1"], options: ["min_periods=1", "start=1", "na_fill=1", "min_rows=1"], explanation: "min_periods=1 يحسب المتوسط حتى لو توفر صف واحد فقط في بداية الجدول." },
+            { id: "md_py7", subject: "PYTHON", title: "7. إعادة ترقيم الفهرس مع explode و concat", question: "لإعادة ترقيم الـ Index ليبدأ من 0, 1, 2 بعد تفكيك القوائم:", codeBefore: "df.explode('tags', ", codeAfter: ")", accepted: ["ignore_index=True", "ignore_index = True"], options: ["ignore_index=True", "reset_index=True", "drop_index=True", "reindex=True"], explanation: "ignore_index=True يعمل داخل concat و explode و sort_values." },
+            { id: "md_py8", subject: "PYTHON", title: "8. القيمة الافتراضية ELSE في np.select", question: "ما الباراميتر الذي يمثل ELSE في np.select ويمنع وضع رقم 0 افتراضياً؟", codeBefore: "np.select(condlist=conditions, choicelist=choices, ", codeAfter: ")", accepted: ["default='Low'", 'default="Low"'], options: ["default='Low'", "else_val='Low'", "otherwise='Low'", "fillna='Low'"], explanation: "default='Low' يحدد القيمة الافتراضية عند عدم تحقق أي شرط." },
+            { id: "md_py9", subject: "PYTHON", title: "9. قراءة ملف 20GB على دفعات لحماية الـ RAM", question: "لقراءة ملف ضخم على دفعات من 100000 صف:", codeBefore: "for chunk in pd.read_csv('huge.csv', ", codeAfter: "):", accepted: ["chunksize=100000", "chunksize = 100000"], options: ["chunksize=100000", "batch_size=100000", "nrows=100000", "blocksize=100000"], explanation: "chunksize=100000 يقرأ الملف دفعة بدفعة دون ملء الذاكرة." },
+            { id: "md_py10", subject: "PYTHON", title: "10. (من كشكولك) جمع نتائج الـ Chunks على نفس الـ Index", question: "عندما تكون الفئة هي الـ Index في ملخصات الدفعات، نجمع على المستوى الأول للفهرس بـ:", codeBefore: "pd.concat(chunks_summary).groupby(", codeAfter: ").sum()", accepted: ["level=0", "level = 0"], options: ["level=0", "axis=0", "index=0", "by_index=True"], explanation: "level=0 يجمع الصفوف التي لها نفس الـ Index." },
+            { id: "md_py11", subject: "PYTHON", title: "11. الفحص الدفاعي ضد Schema Drift", question: "للتحقق من أن مجموعة required_cols موجودة بالكامل داخل df.columns:", codeBefore: "if not required_cols.", codeAfter: "(df.columns): raise ValueError('Missing!')", accepted: ["issubset"], options: ["issubset", "isin", "contains", "has_all"], explanation: "issubset تفحص احتواء مجموعة الأعمدة المطلوبة داخل أعمدة الجدول." },
+
+            { id: "md_sql1", subject: "SQL", title: "1. دالة الترتيب الصحيحة لثاني أعلى سعر مع وجود تعادل", question: "لو الأسعار [500, 500, 400]، أي دالة تعطي (1, 1, 2) بدون قفز عن الرقم 2؟", codeBefore: "SELECT price, ", codeAfter: " OVER (PARTITION BY category ORDER BY price DESC) AS rnk", accepted: ["DENSE_RANK()", "dense_rank()"], options: ["DENSE_RANK()", "RANK()", "ROW_NUMBER()", "NTILE(2)"], explanation: "DENSE_RANK() لا تقفز في الترتيب بعد التعادل." },
+            { id: "md_sql2", subject: "SQL", title: "2. إطار النافذة الدقيق لمنع دمج التواريخ المتعادلة", question: "لضمان عدّ الصفوف الفيزيائية بدقة في المتوسط المتحرك نكتب:", codeBefore: "AVG(price) OVER (PARTITION BY cust_id ORDER BY order_date ", codeAfter: " 2 PRECEDING AND CURRENT ROW)", accepted: ["ROWS BETWEEN", "rows between"], options: ["ROWS BETWEEN", "RANGE BETWEEN", "GROUPS BETWEEN", "LIMIT BETWEEN"], explanation: "ROWS BETWEEN تعد صفوفاً فعلية بينما RANGE تدمج القيم المتعادلة." },
+            { id: "md_sql3", subject: "SQL", title: "3. (من كشكولك) إطار المجموع التراكمي Running Total منذ أول صف", question: "لتثبيت بداية النافذة عند أول صف في المجموعة لحساب المجموع التراكمي نكتب:", codeBefore: "SUM(price) OVER (PARTITION BY cust_id ORDER BY order_date ROWS BETWEEN ", codeAfter: " AND CURRENT ROW)", accepted: ["UNBOUNDED PRECEDING", "unbounded preceding"], options: ["UNBOUNDED PRECEDING", "1 PRECEDING", "ALL PRECEDING", "FIRST ROW"], explanation: "UNBOUNDED PRECEDING يبدأ من أول صف في الـ Partition." },
+            { id: "md_sql4", subject: "SQL", title: "4. (من كشكولك) تقسيم العملاء إلى 4 شرائح متساوية (Quartiles)", question: "لتقسيم العملاء المرتبين تنازلياً حسب الإنفاق إلى 4 مجموعات متساوية (25% لكل شريحة):", codeBefore: "SELECT cust_id, ", codeAfter: " OVER (ORDER BY total_spend DESC) AS quartile FROM summary;", accepted: ["NTILE(4)", "ntile(4)"], options: ["NTILE(4)", "RANK(4)", "PERCENTILE(4)", "BUCKET(4)"], explanation: "NTILE(4) تقسم الصفوف إلى 4 مجموعات متساوية من 1 إلى 4." },
+            { id: "md_sql5", subject: "SQL", title: "5. (من كشكولك) استخراج العملاء المشتركين بين شهرين", question: "لإرجاع أرقام العملاء الذين اشتروا في يناير واشتروا أيضاً في فبراير (مع إزالة التكرار):", codeBefore: "SELECT cust_id FROM jan_orders ", codeAfter: " SELECT cust_id FROM feb_orders;", accepted: ["INTERSECT", "intersect"], options: ["INTERSECT", "UNION ALL", "EXCEPT", "CROSS JOIN"], explanation: "INTERSECT يرجع الصفوف المشتركة فقط بين الاستعلامين." },
+            { id: "md_sql6", subject: "SQL", title: "6. (من كشكولك) استخراج العملاء المتوقفين عن الشراء (Churn)", question: "لإرجاع العملاء الموجودين في يناير وغير الموجودين في فبراير:", codeBefore: "SELECT cust_id FROM jan_orders ", codeAfter: " SELECT cust_id FROM feb_orders;", accepted: ["EXCEPT", "except", "MINUS", "minus"], options: ["EXCEPT", "INTERSECT", "UNION", "INNER JOIN"], explanation: "EXCEPT يطرح نتائج الاستعلام الثاني من الأول." },
+            { id: "md_sql7", subject: "SQL", title: "7. الدالة الآمنة لتعويض NULL بصفر عند طرح المرتجعات", question: "لتجنب تحول النتيجة إلى NULL عند طرح المرتجعات غير الموجودة في LEFT JOIN:", codeBefore: "SUM(o.gross_sales - ", codeAfter: "(r.total_refund, 0)) AS net_sales", accepted: ["COALESCE", "coalesce", "NVL", "nvl"], options: ["COALESCE", "NULLIF", "ISNULL_VAL", "IFEMPTY"], explanation: "COALESCE(r.total_refund, 0) تستبدل القيمة الفارغة بصفر." }
+        ];
+
+        // 24 Cold-Write Exercises (15 Python + 9 SQL)
+        const coldWriteTemplates = [
+            {
+                id: "cw_m1", subject: "PYTHON", category: "MASTER5", badge: "🏆 القالب المجمع الشامل 1/5 (من كشكولك)",
+                title: "القالب الشامل 1: الفلترة والترتيب (7 دوال معاً)",
+                prompt: "استخرج من <span class='inline-code'>df</span> الطلبات التي حالتها ضمن <span class='inline-code'>['Delivered', 'Processing']</span>، وسعرها بين <span class='inline-code'>100</span> و <span class='inline-code'>2500</span>، وفئتها غير فارغة (<span class='inline-code'>notna</span>)، وتحتوي <span class='inline-code'>tags</span> فيها على <span class='inline-code'>'fragile'</span> (<span class='inline-code'>na=False</span>)، واعرض فقط <span class='inline-code'>['order_id', 'cust_id', 'price']</span> مرتبة تنازلياً بالسعر مع أخذ أعلى طلبين فقط (<span class='inline-code'>nlargest(2, 'price')</span>).",
+                hints: ["df.loc[(شرط1) & (شرط2) & (شرط3) & (شرط4), ['order_id', 'cust_id', 'price']]", "الشروط: .isin([...]), .between(100, 2500), .notna(), .str.contains('fragile', na=False)", "اختم بـ .sort_values(by='price', ascending=False).nlargest(2, 'price')"],
+                solution: `ans1 = df.loc[\n    (df['status'].isin(['Delivered', 'Processing'])) &\n    (df['price'].between(100, 2500)) &\n    (df['category'].notna()) &\n    (df['tags'].str.contains('fragile', na=False)),\n    ['order_id', 'cust_id', 'price']\n].sort_values(by='price', ascending=False).nlargest(2, 'price')`,
+                checks: [
+                    { label: "df.loc[...]", regex: /df\s*\.\s*loc\s*\[/ },
+                    { label: "isin & between & notna", regex: /\.isin[\s\S]*\.between\s*\(\s*100\s*,\s*2500\s*\)[\s\S]*\.notna\s*\(\s*\)/ },
+                    { label: "str.contains('fragile', na=False)", regex: /str\.contains\s*\(\s*['"]fragile['"]\s*,\s*na\s*=\s*False\s*\)/ },
+                    { label: "nlargest(2, 'price')", regex: /nlargest\s*\(\s*2\s*,\s*['"]price['"]\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_m2", subject: "PYTHON", category: "MASTER5", badge: "🏆 القالب المجمع الشامل 2/5 (من كشكولك)",
+                title: "القالب الشامل 2: التنظيف والتحويل (8 دوال معاً)",
+                prompt: "احذف تكرارات <span class='inline-code'>order_id</span> مع إبقاء أول ظهور (<span class='inline-code'>keep='first'</span>)، وفي عمود <span class='inline-code'>coupon</span> استبدل <span class='inline-code'>'none'</span> بـ <span class='inline-code'>np.nan</span> ثم <span class='inline-code'>str.strip().str.lower()</span>، وحول <span class='inline-code'>shipping_str</span> لـ <span class='inline-code'>float</span>، و<span class='inline-code'>order_date</span> لتاريخ بـ <span class='inline-code'>pd.to_datetime</span>، ثم أعد تسمية <span class='inline-code'>shipping_str</span> إلى <span class='inline-code'>shipping_fee</span> واحذف الصفوف الفارغة في <span class='inline-code'>category</span>.",
+                hints: ["drop_duplicates(subset=['order_id'], keep='first').copy()", "replace('none', np.nan).str.strip().str.lower()", "astype(float) و pd.to_datetime(...)", "rename(columns={'shipping_str': 'shipping_fee'}).dropna(subset=['category'])"],
+                solution: `clean_df = df.drop_duplicates(subset=['order_id'], keep='first').copy()\nclean_df['coupon'] = clean_df['coupon'].replace('none', np.nan).str.strip().str.lower()\nclean_df['shipping_str'] = clean_df['shipping_str'].astype(float)\nclean_df['order_date'] = pd.to_datetime(clean_df['order_date'])\nans2 = clean_df.rename(columns={'shipping_str': 'shipping_fee'}).dropna(subset=['category'])`,
+                checks: [
+                    { label: "drop_duplicates(subset=['order_id'], keep='first')", regex: /drop_duplicates\s*\(\s*subset\s*=\s*\[\s*['"]order_id['"]\s*\]\s*,\s*keep\s*=\s*['"]first['"]\s*\)/ },
+                    { label: "replace('none', np.nan).str.strip().str.lower()", regex: /replace\s*\(\s*['"]none['"]\s*,\s*np\.nan\s*\)\.str\.strip\s*\(\s*\)\.str\.lower\s*\(\s*\)/ },
+                    { label: "astype(float) & pd.to_datetime", regex: /astype\s*\(\s*float\s*\)[\s\S]*pd\.to_datetime/ },
+                    { label: "rename & dropna(subset=['category'])", regex: /rename[\s\S]*dropna\s*\(\s*subset\s*=\s*\[\s*['"]category['"]\s*\]\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_m3", subject: "PYTHON", category: "MASTER5", badge: "🏆 القالب المجمع الشامل 3/5 (من كشكولك)",
+                title: "القالب الشامل 3: التجميع ودوال النوافذ (7 دوال معاً)",
+                prompt: "بعد ترتيب الجدول بـ <span class='inline-code'>['cust_id', 'order_date']</span>، املأ السعر الفارغ بمتوسط سعر نفس الفئة (<span class='inline-code'>backup_cat</span>) بـ <span class='inline-code'>transform('mean')</span>، واحسب تاريخ الطلب السابق لكل عميل بـ <span class='inline-code'>shift(1)</span>، ثم لخص لكل عميل (<span class='inline-code'>as_index=False</span>) إجمالي الإنفاق <span class='inline-code'>('price', 'sum')</span>، عدد الطلبات <span class='inline-code'>('order_id', 'count')</span>، وعدد البائعين الفريدين <span class='inline-code'>('seller_id', 'nunique')</span>.",
+                hints: ["fillna(w_df.groupby('backup_cat')['price'].transform('mean'))", "groupby('cust_id')['order_date'].shift(1)", "groupby('cust_id', as_index=False).agg(...)"],
+                solution: `w_df = df.sort_values(['cust_id', 'order_date']).copy()\nw_df['price'] = w_df['price'].fillna(w_df.groupby('backup_cat')['price'].transform('mean'))\nw_df['prev_date'] = w_df.groupby('cust_id')['order_date'].shift(1)\nans3 = w_df.groupby('cust_id', as_index=False).agg(\n    total_spend=('price', 'sum'),\n    orders_cnt=('order_id', 'count'),\n    unique_sellers=('seller_id', 'nunique')\n)`,
+                checks: [
+                    { label: "transform('mean')", regex: /groupby\s*\(\s*['"]backup_cat['"]\s*\)\s*\[\s*['"]price['"]\s*\]\s*\.transform\s*\(\s*['"]mean['"]\s*\)/ },
+                    { label: "groupby('cust_id')['order_date'].shift(1)", regex: /groupby\s*\(\s*['"]cust_id['"]\s*\)\s*\[\s*['"]order_date['"]\s*\]\s*\.shift\s*\(\s*1\s*\)/ },
+                    { label: "groupby('cust_id', as_index=False).agg(...)", regex: /groupby\s*\(\s*['"]cust_id['"]\s*,\s*as_index\s*=\s*False\s*\)\s*\.agg/ }
+                ]
+            },
+            {
+                id: "cw_m4", subject: "PYTHON", category: "MASTER5", badge: "🏆 القالب المجمع الشامل 4/5 (من كشكولك)",
+                title: "القالب الشامل 4: الدمج والـ Pivot والـ Melt (5 دوال معاً)",
+                prompt: "ادمج <span class='inline-code'>df</span> مع <span class='inline-code'>sellers_df</span> بـ Left Join على <span class='inline-code'>seller_id</span> مع <span class='inline-code'>indicator=True</span>، ثم ابنِ <span class='inline-code'>pivot_table</span> يجعل <span class='inline-code'>cust_id</span> في الصفوف و <span class='inline-code'>backup_cat</span> في الأعمدة ويجمع <span class='inline-code'>qty</span> مع <span class='inline-code'>fill_value=0</span> و <span class='inline-code'>reset_index()</span>، ثم اعكس الجدول للشكل الطولي بـ <span class='inline-code'>melt</span>.",
+                hints: ["pd.merge(df, sellers_df, on='seller_id', how='left', indicator=True)", "pd.pivot_table(merged, values='qty', index='cust_id', columns='backup_cat', aggfunc='sum', fill_value=0).reset_index()", "pivoted.melt(id_vars=['cust_id'], var_name='backup_cat', value_name='total_qty')"],
+                solution: `merged = pd.merge(df, sellers_df, on='seller_id', how='left', indicator=True)\npivoted = pd.pivot_table(merged, values='qty', index='cust_id', columns='backup_cat', aggfunc='sum', fill_value=0).reset_index()\nans4 = pivoted.melt(id_vars=['cust_id'], var_name='backup_cat', value_name='total_qty')`,
+                checks: [
+                    { label: "pd.merge(..., indicator=True)", regex: /pd\.merge\s*\([\s\S]*indicator\s*=\s*True\s*\)/ },
+                    { label: "pivot_table(..., fill_value=0).reset_index()", regex: /pivot_table\s*\([\s\S]*fill_value\s*=\s*0\s*\)\s*\.reset_index\s*\(\s*\)/ },
+                    { label: ".melt(id_vars=['cust_id'], ...)", regex: /\.melt\s*\(\s*id_vars\s*=\s*\[\s*['"]cust_id['"]\s*\]/ }
+                ]
+            },
+            {
+                id: "cw_m5", subject: "PYTHON", category: "MASTER5", badge: "🏆 القالب المجمع الشامل 5/5 (من كشكولك)",
+                title: "القالب الشامل 5: NumPy + Rolling + Lambda + Explode (7 دوال معاً)",
+                prompt: "أنشئ <span class='inline-code'>is_bulk</span> بـ <span class='inline-code'>np.where(ev_df['qty'] >= 2, 1, 0)</span>، و <span class='inline-code'>price_tier</span> بـ <span class='inline-code'>np.select</span>، واحسب المتوسط المتحرك <span class='inline-code'>rolling(window=2, min_periods=1).mean()</span> ونسبة النمو بـ <span class='inline-code'>pct_change()</span>، ومدى الكمية لكل فئة بـ <span class='inline-code'>transform(lambda x: x.max() - x.min())</span>، ثم فكك <span class='inline-code'>tags</span> بـ <span class='inline-code'>str.split(',')</span> و <span class='inline-code'>explode('tags', ignore_index=True)</span>.",
+                hints: ["np.where و np.select(..., default='Standard')", "rolling(window=2, min_periods=1).mean() و pct_change()", "groupby('backup_cat')['qty'].transform(lambda x: x.max() - x.min())", "assign(tags=ev_df['tags'].str.split(',')).explode('tags', ignore_index=True)"],
+                solution: `ev_df = df.copy()\nev_df['is_bulk'] = np.where(ev_df['qty'] >= 2, 1, 0)\nev_df['price_tier'] = np.select([ev_df['price'].isna(), ev_df['price'] >= 1000], ['Missing', 'High'], default='Standard')\nev_df['roll_qty'] = ev_df['qty'].rolling(window=2, min_periods=1).mean()\nev_df['qty_growth'] = ev_df['qty'].pct_change()\nev_df['qty_range'] = ev_df.groupby('backup_cat')['qty'].transform(lambda x: x.max() - x.min())\nans5 = ev_df.assign(tags=ev_df['tags'].str.split(',')).explode('tags', ignore_index=True)`,
+                checks: [
+                    { label: "np.where & np.select(..., default=...)", regex: /np\.where[\s\S]*np\.select[\s\S]*default\s*=/ },
+                    { label: "rolling(window=2, min_periods=1).mean() & pct_change()", regex: /rolling\s*\(\s*(window\s*=\s*)?2\s*,\s*min_periods\s*=\s*1\s*\)\s*\.mean\s*\(\s*\)[\s\S]*pct_change\s*\(\s*\)/ },
+                    { label: "transform(lambda x: x.max() - x.min())", regex: /transform\s*\(\s*lambda\s+\w+\s*:\s*\w+\.max\s*\(\s*\)\s*-\s*\w+\.min\s*\(\s*\)\s*\)/ },
+                    { label: "str.split(',') & explode('tags', ignore_index=True)", regex: /str\.split\s*\(\s*['"],['"]\s*\)[\s\S]*explode\s*\(\s*['"]tags['"]\s*,\s*ignore_index\s*=\s*True\s*\)/ }
+                ]
+            },
+
+            // --- 10 FOCUSED PYTHON EXERCISES ---
+            {
+                id: "cw_py1", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 1/10",
+                title: "1. فلترة الطلبات بـ loc و isin و between",
+                prompt: "باستخدام <span class='inline-code'>df.loc</span>، استخرج الطلبات التي حالتها <span class='inline-code'>status</span> ضمن <span class='inline-code'>['Delivered', 'Processing']</span>، وسعرها <span class='inline-code'>price</span> بين <span class='inline-code'>100</span> و <span class='inline-code'>2500</span>، واعرض فقط <span class='inline-code'>['order_id', 'cust_id', 'price']</span>.",
+                hints: ["df.loc[(df['status'].isin([...])) & (df['price'].between(100, 2500)), ['order_id', 'cust_id', 'price']]"],
+                solution: `ans = df.loc[\n    (df['status'].isin(['Delivered', 'Processing'])) &\n    (df['price'].between(100, 2500)),\n    ['order_id', 'cust_id', 'price']\n]`,
+                checks: [
+                    { label: "df.loc[...]", regex: /df\s*\.\s*loc\s*\[/ },
+                    { label: ".isin(['Delivered', 'Processing'])", regex: /\.isin\s*\(\s*\[\s*['"]Delivered['"]\s*,\s*['"]Processing['"]\s*\]\s*\)/ },
+                    { label: ".between(100, 2500)", regex: /\.between\s*\(\s*100\s*,\s*2500\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py2", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 2/10",
+                title: "2. البحث النصي الآمن بـ str.contains و na=False",
+                prompt: "استخرج من <span class='inline-code'>df</span> الصفوف التي تكون فيها <span class='inline-code'>category</span> غير فارغة (<span class='inline-code'>notna</span>) ويحتوي عمود <span class='inline-code'>tags</span> على <span class='inline-code'>'fragile'</span> مع تأمين الفراغات بـ <span class='inline-code'>na=False</span>.",
+                hints: ["(df['category'].notna()) & (df['tags'].str.contains('fragile', na=False))"],
+                solution: `ans = df.loc[(df['category'].notna()) & (df['tags'].str.contains('fragile', na=False))]`,
+                checks: [
+                    { label: ".notna()", regex: /\.notna\s*\(\s*\)/ },
+                    { label: ".str.contains('fragile', na=False)", regex: /\.str\.contains\s*\(\s*['"]fragile['"]\s*,\s*na\s*=\s*False\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py3", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 3/10",
+                title: "3. تنظيف النصوص وحذف التكرارات",
+                prompt: "احذف تكرارات <span class='inline-code'>order_id</span> مع <span class='inline-code'>keep='first'</span>، وفي عمود <span class='inline-code'>coupon</span> استبدل <span class='inline-code'>'none'</span> بـ <span class='inline-code'>np.nan</span> ثم طبق <span class='inline-code'>str.strip().str.lower()</span>.",
+                hints: ["drop_duplicates(subset=['order_id'], keep='first')", "replace('none', np.nan).str.strip().str.lower()"],
+                solution: `df = df.drop_duplicates(subset=['order_id'], keep='first').copy()\ndf['coupon'] = df['coupon'].replace('none', np.nan).str.strip().str.lower()`,
+                checks: [
+                    { label: "drop_duplicates(subset=['order_id'], keep='first')", regex: /drop_duplicates\s*\(\s*subset\s*=\s*\[\s*['"]order_id['"]\s*\]\s*,\s*keep\s*=\s*['"]first['"]\s*\)/ },
+                    { label: "replace('none', np.nan).str.strip().str.lower()", regex: /replace\s*\(\s*['"]none['"]\s*,\s*np\.nan\s*\)\.str\.strip\s*\(\s*\)\.str\.lower\s*\(\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py4", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 4/10",
+                title: "4. تعويض القيم الفارغة بمتوسط المجموعة (transform)",
+                prompt: "املأ الفراغات في <span class='inline-code'>df['price']</span> بمتوسط سعر نفس الفئة <span class='inline-code'>backup_cat</span> باستخدام <span class='inline-code'>groupby</span> و <span class='inline-code'>transform('mean')</span>.",
+                hints: ["df['price'] = df['price'].fillna(df.groupby('backup_cat')['price'].transform('mean'))"],
+                solution: `df['price'] = df['price'].fillna(df.groupby('backup_cat')['price'].transform('mean'))`,
+                checks: [
+                    { label: "fillna(...)", regex: /\.fillna\s*\(/ },
+                    { label: "groupby('backup_cat')['price'].transform('mean')", regex: /groupby\s*\(\s*['"]backup_cat['"]\s*\)\s*\[\s*['"]price['"]\s*\]\s*\.transform\s*\(\s*['"]mean['"]\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py5", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 5/10",
+                title: "5. جلب الطلب السابق بـ shift(1) والتجميع بـ agg",
+                prompt: "احسب تاريخ الطلب السابق لكل عميل بـ <span class='inline-code'>groupby('cust_id')['order_date'].shift(1)</span>، ثم لخص لكل عميل (<span class='inline-code'>as_index=False</span>) مجموع <span class='inline-code'>price</span> وعدد البائعين الفريدين <span class='inline-code'>('seller_id', 'nunique')</span>.",
+                hints: ["groupby('cust_id')['order_date'].shift(1)", "groupby('cust_id', as_index=False).agg(total_spend=('price', 'sum'), unique_sellers=('seller_id', 'nunique'))"],
+                solution: `df['prev_date'] = df.groupby('cust_id')['order_date'].shift(1)\nans = df.groupby('cust_id', as_index=False).agg(\n    total_spend=('price', 'sum'),\n    unique_sellers=('seller_id', 'nunique')\n)`,
+                checks: [
+                    { label: "groupby('cust_id')['order_date'].shift(1)", regex: /groupby\s*\(\s*['"]cust_id['"]\s*\)\s*\[\s*['"]order_date['"]\s*\]\s*\.shift\s*\(\s*1\s*\)/ },
+                    { label: "groupby('cust_id', as_index=False).agg(...)", regex: /groupby\s*\(\s*['"]cust_id['"]\s*,\s*as_index\s*=\s*False\s*\)\s*\.agg/ }
+                ]
+            },
+            {
+                id: "cw_py6", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 6/10",
+                title: "6. حساب مدى الفئة بـ transform + lambda",
+                prompt: "احسب الفرق بين أعلى كمية وأقل كمية (<span class='inline-code'>x.max() - x.min()</span>) داخل كل فئة <span class='inline-code'>backup_cat</span> باستخدام <span class='inline-code'>transform</span> مع <span class='inline-code'>lambda</span>.",
+                hints: ["df.groupby('backup_cat')['qty'].transform(lambda x: x.max() - x.min())"],
+                solution: `df['qty_range'] = df.groupby('backup_cat')['qty'].transform(lambda x: x.max() - x.min())`,
+                checks: [
+                    { label: "groupby('backup_cat')['qty'].transform(...)", regex: /groupby\s*\(\s*['"]backup_cat['"]\s*\)\s*\[\s*['"]qty['"]\s*\]\s*\.transform\s*\(/ },
+                    { label: "lambda x: x.max() - x.min()", regex: /lambda\s+\w+\s*:\s*\w+\.max\s*\(\s*\)\s*-\s*\w+\.min\s*\(\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py7", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 7/10",
+                title: "7. بناء جدول محوري بـ pivot_table وعكسه بـ melt",
+                prompt: "ابنِ <span class='inline-code'>pd.pivot_table</span> من <span class='inline-code'>df</span> يجعل <span class='inline-code'>cust_id</span> في الصفوف و <span class='inline-code'>backup_cat</span> في الأعمدة ويجمع <span class='inline-code'>qty</span> مع <span class='inline-code'>fill_value=0</span> و <span class='inline-code'>reset_index()</span>، ثم اعكسه بـ <span class='inline-code'>melt(id_vars=['cust_id'])</span>.",
+                hints: ["pd.pivot_table(df, values='qty', index='cust_id', columns='backup_cat', aggfunc='sum', fill_value=0).reset_index()"],
+                solution: `pivoted = pd.pivot_table(df, values='qty', index='cust_id', columns='backup_cat', aggfunc='sum', fill_value=0).reset_index()\nunpivoted = pivoted.melt(id_vars=['cust_id'], var_name='backup_cat', value_name='total_qty')`,
+                checks: [
+                    { label: "pivot_table(..., fill_value=0).reset_index()", regex: /pivot_table\s*\([\s\S]*fill_value\s*=\s*0\s*\)\s*\.reset_index\s*\(\s*\)/ },
+                    { label: ".melt(id_vars=['cust_id'], ...)", regex: /\.melt\s*\(\s*id_vars\s*=\s*\[\s*['"]cust_id['"]\s*\]/ }
+                ]
+            },
+            {
+                id: "cw_py8", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 8/10",
+                title: "8. التصنيف السريع بـ np.where و np.select",
+                prompt: "أنشئ عمود <span class='inline-code'>is_bulk</span> بـ <span class='inline-code'>np.where(df['qty'] >= 2, 1, 0)</span>، وعمود <span class='inline-code'>price_tier</span> بـ <span class='inline-code'>np.select</span> يعطي <span class='inline-code'>'Missing'</span> إذا السعر فارغاً (<span class='inline-code'>isna</span>)، و <span class='inline-code'>'High'</span> إذا <span class='inline-code'>price >= 1000</span>، و <span class='inline-code'>default='Standard'</span>.",
+                hints: ["np.select([df['price'].isna(), df['price'] >= 1000], ['Missing', 'High'], default='Standard')"],
+                solution: `df['is_bulk'] = np.where(df['qty'] >= 2, 1, 0)\ndf['price_tier'] = np.select([df['price'].isna(), df['price'] >= 1000], ['Missing', 'High'], default='Standard')`,
+                checks: [
+                    { label: "np.where(df['qty'] >= 2, 1, 0)", regex: /np\.where\s*\(\s*df\[['"]qty['"]\]\s*>=\s*2\s*,\s*1\s*,\s*0\s*\)/ },
+                    { label: "np.select(..., default='Standard')", regex: /np\.select\s*\([\s\S]*default\s*=\s*['"]Standard['"]\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py9", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 9/10",
+                title: "9. أتمتة دمج الملفات بـ glob + الفحص الدفاعي بـ issubset",
+                prompt: "اجمع ملفات <span class='inline-code'>'data/orders_*.csv'</span> بـ <span class='inline-code'>glob.glob</span> وادمجها بـ <span class='inline-code'>pd.concat(..., ignore_index=True)</span>، ثم افحص وجود الأعمدة <span class='inline-code'>{'order_id', 'cust_id', 'price'}</span> بـ <span class='inline-code'>issubset(df.columns)</span>.",
+                hints: ["files = glob.glob('data/orders_*.csv')", "if not required_cols.issubset(df.columns): raise ValueError(...)"],
+                solution: `files = glob.glob('data/orders_*.csv')\ndf = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)\nrequired_cols = {'order_id', 'cust_id', 'price'}\nif not required_cols.issubset(df.columns):\n    raise ValueError("Missing columns!")`,
+                checks: [
+                    { label: "glob.glob('data/orders_*.csv')", regex: /glob\.glob\s*\(\s*['"]data\/orders_\*\.csv['"]\s*\)/ },
+                    { label: "pd.concat(..., ignore_index=True)", regex: /pd\.concat\s*\([\s\S]*ignore_index\s*=\s*True\s*\)/ },
+                    { label: ".issubset(df.columns)", regex: /\.issubset\s*\(\s*df\.columns\s*\)/ }
+                ]
+            },
+            {
+                id: "cw_py10", subject: "PYTHON", category: "FOCUSED", badge: "Python مركز 10/10 (فيديو Julie [05:08])",
+                title: "10. مراجعة الكود واكتشاف الأخطاء الـ 3 (Code Review)",
+                prompt: "أصلح الأخطاء الـ 3 في الكود المعطل التالي:<br><span class='inline-code'>sub = df[df['tags'].str.contains('vip') & df['price'] > 500]</span><br><span class='inline-code'>sub['cat_avg'] = sub.groupby('category')['price'].mean()</span>",
+                hints: ["1) أضف na=False داخل str.contains('vip', na=False)", "2) ضع قوسين حول (df['price'] > 500)", "3) استخدم .transform('mean') بدلاً من .mean()"],
+                solution: `sub = df[(df['tags'].str.contains('vip', na=False)) & (df['price'] > 500)].copy()\nsub['cat_avg'] = sub.groupby('category')['price'].transform('mean')`,
+                checks: [
+                    { label: "str.contains('vip', na=False)", regex: /str\.contains\s*\(\s*['"]vip['"]\s*,\s*na\s*=\s*False\s*\)/ },
+                    { label: "(df['price'] > 500)", regex: /\(\s*df\[['"]price['"]\]\s*>\s*500\s*\)/ },
+                    { label: ".transform('mean')", regex: /\.transform\s*\(\s*['"]mean['"]\s*\)/ }
+                ]
+            },
+
+            // --- 9 SQL EXERCISES ---
+            {
+                id: "cw_sql1", subject: "SQL", category: "SQL", badge: "مسألة SQL 1/9",
+                title: "1. المجموع التراكمي والمتوسط المتحرك بـ ROWS BETWEEN",
+                prompt: "اكتب استعلام SQL على جدول <span class='inline-code'>orders</span> يحسب لكل عميل <span class='inline-code'>cust_id</span> بترتيب <span class='inline-code'>order_date</span>: 1) المجموع التراكمي <span class='inline-code'>running_total</span> (<span class='inline-code'>UNBOUNDED PRECEDING</span>)، و 2) المتوسط المتحرك لآخر 3 طلبات (<span class='inline-code'>2 PRECEDING</span>).",
+                hints: ["ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW"],
+                solution: `SELECT \n    cust_id, order_date, price,\n    SUM(price) OVER (PARTITION BY cust_id ORDER BY order_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total,\n    AVG(price) OVER (PARTITION BY cust_id ORDER BY order_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS moving_avg_3_orders\nFROM orders;`,
+                checks: [
+                    { label: "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW", regex: /ROWS\s+BETWEEN\s+UNBOUNDED\s+PRECEDING\s+AND\s+CURRENT\s+ROW/i },
+                    { label: "ROWS BETWEEN 2 PRECEDING AND CURRENT ROW", regex: /ROWS\s+BETWEEN\s+2\s+PRECEDING\s+AND\s+CURRENT\s+ROW/i }
+                ]
+            },
+            {
+                id: "cw_sql2", subject: "SQL", category: "SQL", badge: "مسألة SQL 2/9",
+                title: "2. حساب الاحتفاظ بالعملاء (Retention) بـ CTE و LAG و DATEDIFF",
+                prompt: "باستخدام <span class='inline-code'>WITH customer_timeline AS (...)</span> ودالة <span class='inline-code'>LAG(order_date, 1)</span>، استخرج قائمة العملاء الفريدة (<span class='inline-code'>DISTINCT cust_id</span>) الذين قاموا بطلبين متتاليين بفارق زمني لا يتجاوز 7 أيام (<span class='inline-code'>DATEDIFF(day, prev_order_date, order_date) <= 7</span>).",
+                hints: ["LAG(order_date, 1) OVER (PARTITION BY cust_id ORDER BY order_date) AS prev_order_date"],
+                solution: `WITH customer_timeline AS (\n    SELECT cust_id, order_date,\n           LAG(order_date, 1) OVER (PARTITION BY cust_id ORDER BY order_date) AS prev_order_date\n    FROM orders\n)\nSELECT DISTINCT cust_id\nFROM customer_timeline\nWHERE DATEDIFF(day, prev_order_date, order_date) <= 7;`,
+                checks: [
+                    { label: "LAG(order_date, 1) OVER (PARTITION BY cust_id ORDER BY order_date)", regex: /LAG\s*\(\s*order_date\s*,\s*1\s*\)\s*OVER\s*\(\s*PARTITION\s+BY\s+cust_id\s+ORDER\s+BY\s+order_date\s*\)/i },
+                    { label: "DATEDIFF(day, prev_order_date, order_date) <= 7", regex: /DATEDIFF\s*\(\s*day\s*,\s*prev_order_date\s*,\s*order_date\s*\)\s*<=\s*7/i }
+                ]
+            },
+            {
+                id: "cw_sql3", subject: "SQL", category: "SQL", badge: "مسألة SQL 3/9",
+                title: "3. استخراج ثاني أعلى سعر في كل فئة بـ DENSE_RANK",
+                prompt: "باستخدام CTE ودالة <span class='inline-code'>DENSE_RANK()</span>، استخرج الطلبات التي تمثل <strong>ثاني أعلى سعر</strong> (<span class='inline-code'>rnk = 2</span>) داخل كل فئة <span class='inline-code'>category</span>.",
+                hints: ["DENSE_RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rnk"],
+                solution: `WITH ranked_orders AS (\n    SELECT order_id, category, price,\n           DENSE_RANK() OVER (PARTITION BY category ORDER BY price DESC) AS rnk\n    FROM orders\n)\nSELECT order_id, category, price\nFROM ranked_orders\nWHERE rnk = 2;`,
+                checks: [
+                    { label: "DENSE_RANK() OVER (PARTITION BY category ORDER BY price DESC)", regex: /DENSE_RANK\s*\(\s*\)\s*OVER\s*\(\s*PARTITION\s+BY\s+category\s+ORDER\s+BY\s+price\s+DESC\s*\)/i },
+                    { label: "WHERE rnk = 2", regex: /WHERE\s+rnk\s*=\s*2/i }
+                ]
+            },
+            {
+                id: "cw_sql4", subject: "SQL", category: "SQL", badge: "مسألة SQL 4/9",
+                title: "4. عملاء اشتروا Alexa و Kindle ولم يشتروا FireTV (HAVING CASE WHEN)",
+                prompt: "من جدول <span class='inline-code'>orders</span>، استخرج <span class='inline-code'>cust_id</span> للعملاء الذين اشتروا <span class='inline-code'>'Alexa'</span> واشتروا <span class='inline-code'>'Kindle'</span> ولكن لم يشتروا أبداً <span class='inline-code'>'FireTV'</span>.",
+                hints: ["GROUP BY cust_id HAVING SUM(CASE WHEN product = 'Alexa' THEN 1 ELSE 0 END) > 0 ..."],
+                solution: `SELECT cust_id\nFROM orders\nGROUP BY cust_id\nHAVING SUM(CASE WHEN product = 'Alexa' THEN 1 ELSE 0 END) > 0\n   AND SUM(CASE WHEN product = 'Kindle' THEN 1 ELSE 0 END) > 0\n   AND SUM(CASE WHEN product = 'FireTV' THEN 1 ELSE 0 END) = 0;`,
+                checks: [
+                    { label: "GROUP BY cust_id HAVING", regex: /GROUP\s+BY\s+cust_id[\s\S]*HAVING/i },
+                    { label: "CASE WHEN product = 'FireTV' ... = 0", regex: /CASE\s+WHEN\s+product\s*=\s*['"]FireTV['"]\s+THEN\s+1\s+ELSE\s+0\s+END\s*\)\s*=\s*0/i }
+                ]
+            },
+            {
+                id: "cw_sql5", subject: "SQL", category: "SQL", badge: "مسألة SQL 5/9",
+                title: "5. صافي المبيعات بعد خصم المرتجعات بدون مضاعفة الصفوف (Fan-out Prevention)",
+                prompt: "لديك <span class='inline-code'>orders (order_id, seller_id, gross_sales)</span> و <span class='inline-code'>refunds (refund_id, order_id, refund_amt)</span>. اجمع المرتجعات لكل <span class='inline-code'>order_id</span> في CTE أولاً، ثم ادمجه بـ <span class='inline-code'>LEFT JOIN</span> لحساب <span class='inline-code'>SUM(gross_sales - COALESCE(total_refund, 0))</span> لكل <span class='inline-code'>seller_id</span>.",
+                hints: ["WITH order_refunds AS (SELECT order_id, SUM(refund_amt) AS total_refund FROM refunds GROUP BY order_id)"],
+                solution: `WITH order_refunds AS (\n    SELECT order_id, SUM(refund_amt) AS total_refund\n    FROM refunds\n    GROUP BY order_id\n)\nSELECT o.seller_id,\n       SUM(o.gross_sales - COALESCE(r.total_refund, 0)) AS net_sales\nFROM orders o\nLEFT JOIN order_refunds r ON o.order_id = r.order_id\nGROUP BY o.seller_id;`,
+                checks: [
+                    { label: "تجميع المرتجعات GROUP BY order_id في CTE", regex: /FROM\s+refunds[\s\S]*GROUP\s+BY\s+order_id/i },
+                    { label: "LEFT JOIN مع COALESCE(..., 0)", regex: /LEFT\s+JOIN[\s\S]*COALESCE\s*\([^,]+,\s*0\s*\)|COALESCE\s*\([^,]+,\s*0\s*\)[\s\S]*LEFT\s+JOIN/i }
+                ]
+            },
+            {
+                id: "cw_sql6", subject: "SQL", category: "SQL", badge: "مسألة SQL 6/9",
+                title: "6. استخراج الموظفين الذين لم يُعيّن لهم أي مشروع (Anti-Join)",
+                prompt: "ادمج <span class='inline-code'>employees e</span> مع <span class='inline-code'>projects p</span> بـ <span class='inline-code'>LEFT JOIN</span> على <span class='inline-code'>emp_id</span> واستخرج الموظفين الذين ليس لديهم مشروع (<span class='inline-code'>WHERE p.emp_id IS NULL</span>).",
+                hints: ["LEFT JOIN projects p ON e.emp_id = p.emp_id WHERE p.emp_id IS NULL"],
+                solution: `SELECT e.emp_id, e.emp_name\nFROM employees e\nLEFT JOIN projects p ON e.emp_id = p.emp_id\nWHERE p.emp_id IS NULL;`,
+                checks: [
+                    { label: "LEFT JOIN projects", regex: /LEFT\s+JOIN\s+projects/i },
+                    { label: "WHERE p.emp_id IS NULL", regex: /WHERE\s+\w+\.(emp_id|proj_id)\s+IS\s+NULL/i }
+                ]
+            },
+            {
+                id: "cw_sql7", subject: "SQL", category: "SQL", badge: "مسألة SQL 7/9",
+                title: "7. جلب أحدث صف لكل منتج بدون استخدام Window Functions",
+                prompt: "من جدول <span class='inline-code'>product_updates (product_id, price, updated_at)</span>، استخرج أحدث صف لكل منتج عبر ربطه باستعلام يحسب <span class='inline-code'>MAX(updated_at) GROUP BY product_id</span>.",
+                hints: ["WITH latest AS (SELECT product_id, MAX(updated_at) AS max_dt FROM product_updates GROUP BY product_id)"],
+                solution: `WITH latest_dt AS (\n    SELECT product_id, MAX(updated_at) AS max_dt\n    FROM product_updates\n    GROUP BY product_id\n)\nSELECT p.product_id, p.price, p.updated_at\nFROM product_updates p\nINNER JOIN latest_dt l ON p.product_id = l.product_id AND p.updated_at = l.max_dt;`,
+                checks: [
+                    { label: "MAX(updated_at) ... GROUP BY product_id", regex: /MAX\s*\(\s*updated_at\s*\)[\s\S]*GROUP\s+BY\s+product_id/i },
+                    { label: "JOIN ON product_id AND updated_at", regex: /JOIN[\s\S]*ON[\s\S]*product_id[\s\S]*updated_at/i }
+                ]
+            },
+            {
+                id: "cw_sql8", subject: "SQL", category: "SQL", badge: "مسألة SQL 8/9 (من فيديو d7pZNZbpdo8)",
+                title: "8. تجميع فترات الحضور والغياب المتتالية (emp_attendance Gaps & Islands)",
+                prompt: "من جدول <span class='inline-code'>emp_attendance (employee, dates, status)</span>، ادمج التواريخ المتتالية لنفس الحالة في صف واحد يعرض <span class='inline-code'>employee, MIN(dates) AS from_date, MAX(dates) AS to_date, status</span> باستخدام حيلة طرح اثنين <span class='inline-code'>ROW_NUMBER()</span>.",
+                hints: ["ROW_NUMBER() OVER (PARTITION BY employee ORDER BY dates) - ROW_NUMBER() OVER (PARTITION BY employee, status ORDER BY dates) AS grp_id", "GROUP BY employee, status, grp_id"],
+                solution: `WITH grouped_attendance AS (\n    SELECT employee, dates, status,\n           ROW_NUMBER() OVER (PARTITION BY employee ORDER BY dates) -\n           ROW_NUMBER() OVER (PARTITION BY employee, status ORDER BY dates) AS grp_id\n    FROM emp_attendance\n)\nSELECT employee, MIN(dates) AS from_date, MAX(dates) AS to_date, status\nFROM grouped_attendance\nGROUP BY employee, status, grp_id\nORDER BY employee, from_date;`,
+                checks: [
+                    { label: "طرح اثنين ROW_NUMBER() OVER (...)", regex: /ROW_NUMBER\s*\(\s*\)\s*OVER[\s\S]*-[\s\S]*ROW_NUMBER\s*\(\s*\)\s*OVER/i },
+                    { label: "MIN(dates) & MAX(dates) مع GROUP BY", regex: /MIN\s*\(\s*dates\s*\)[\s\S]*MAX\s*\(\s*dates\s*\)[\s\S]*GROUP\s+BY/i }
+                ]
+            },
+            {
+                id: "cw_sql9", subject: "SQL", category: "SQL", badge: "مسألة SQL 9/9 (من كشكولك)",
+                title: "9. تقسيم العملاء إلى 4 شرائح إنفاق بـ NTILE(4) لاستخراج شريحة الـ VIP",
+                prompt: "استخدم CTE ودالة <span class='inline-code'>NTILE(4) OVER (ORDER BY total_spend DESC) AS quartile</span> على جدول <span class='inline-code'>customer_spend</span>، ثم استخرج عملاء الشريحة الأولى (<span class='inline-code'>WHERE quartile = 1</span>).",
+                hints: ["NTILE(4) OVER (ORDER BY total_spend DESC) AS quartile"],
+                solution: `WITH spend_tiers AS (\n    SELECT cust_id, total_spend,\n           NTILE(4) OVER (ORDER BY total_spend DESC) AS quartile\n    FROM customer_spend\n)\nSELECT cust_id, total_spend\nFROM spend_tiers\nWHERE quartile = 1;`,
+                checks: [
+                    { label: "NTILE(4) OVER (ORDER BY total_spend DESC)", regex: /NTILE\s*\(\s*4\s*\)\s*OVER\s*\(\s*ORDER\s+BY\s+total_spend\s+DESC\s*\)/i },
+                    { label: "WHERE quartile = 1", regex: /WHERE\s+quartile\s*=\s*1/i }
+                ]
+            }
+        ];
+
+        // 27 Learn-First Then Test Cards Separated Cleanly into DWH (10), STATS (5), BIZ (6), STAR (6)
+        const scenarioFlashcards = [
+            // ================= TAB 4: DWH, SPARK & AWS (10 UNITS) =================
+            {
+                id: "fc_dwh1", subject: "DWH", badge: "Data Warehousing 1/10",
+                title: "1. الفرق بين Partitioning و Clustering + قواعد SARGable Queries",
+                fullAnswer: `• التقسيم الفيزيائي (Partitioning): يقسم الجدول الكبير إلى مجلدات فرعية منفصلة بناءً على عمود ذي قيم محدودة (Low Cardinality) وغالباً يكون عمود التاريخ (order_date). فائدته: يمنع المسح الكامل للجدول (Full Table Scan) عبر ميزة Partition Pruning، فيقرأ فقط ملفات الشهر المطلوب في جملة WHERE.
+• الفرز الداخلي (Clustering في BigQuery/Snowflake أو Sort Keys في Redshift): يرتب البيانات داخل كل Partition بناءً على أعمدة ذات قيم كثيرة (High Cardinality) تتكرر في شروط الفلترة والـ Joins مثل (customer_id, category, seller_id). فائدته: يجمع الصفوف المتشابهة في نفس البلوكات الفيزيائية فيسرع GROUP BY و JOIN.
+• قواعد كتابة استعلام سريع (SARGable Queries): لا تكتب دالة حول عمود التاريخ في الشرط مثل WHERE YEAR(order_date) = 2026 لأنها تعطل الـ Partition، بل اكتب WHERE order_date >= '2026-01-01' AND order_date < '2027-01-01'، وتجنب SELECT * تماماً في قواعد البيانات العمودية.`,
+                question: "يسألك المحاور: استعلام يفلتر جدول المبيعات الضخم بالتاريخ ويدمجه بـ customer_id يعمل ببطء شديد. كيف تستخدم Partitioning و Clustering و SARGable Queries لتسريعه؟",
+                keywords: [
+                    { text: "Partitioning على عمود ذي قيم محدودة (Low Cardinality) مثل order_date لتفعيل Partition Pruning", correct: true },
+                    { text: "Clustering / Sort Keys على أعمدة High Cardinality مثل customer_id لتسريع الـ JOIN والـ GROUP BY", correct: true },
+                    { text: "كتابة شرط تاريخ SARGable بدون دالة مثل WHERE order_date >= '2026-01-01' بدلاً من YEAR(order_date)", correct: true },
+                    { text: "تجنب SELECT * وفلترة الجداول مبكراً داخل الـ CTE قبل الـ JOIN", correct: true },
+                    { text: "فخ خاطئ: عمل Partitioning على عمود order_id ذي الملايين من القيم الفريدة", correct: false },
+                    { text: "فخ خاطئ: استخدام WHERE YEAR(order_date) = 2026 لتسريع قراءة البارتيشن", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh2", subject: "DWH", badge: "Data Warehousing 2/10",
+                title: "2. أنماط توزيع البيانات في Amazon Redshift (KEY vs ALL vs EVEN)",
+                fullAnswer: `• في Amazon Redshift، تتوزع البيانات على عدة عقد (Compute Nodes)، واختيار نمط التوزيع (Distribution Style) يمنع بطء الشبكة أثناء الـ JOIN:
+  1. نمط KEY: يضع الصفوف التي لها نفس مفتاح الـ Join (مثل customer_id) على نفس العقدة (Node) لمنع نقل البيانات عبر الشبكة (Shuffle) أثناء دمج جدولين كبيرين.
+  2. نمط ALL: ينسخ جدول الـ Dimension الصغير بالكامل على كل العقد لتسريع ربطه بجدول الـ Fact الضخم محلياً.
+  3. نمط EVEN: يوزع الصفوف بالتساوي بطريقة دائرية (Round-Robin) عندما لا يوجد عمود Join واضح.`,
+                question: "يسألك المحاور: متى تختار KEY أو ALL أو EVEN كنمط توزيع (DISTSTYLE) عند تصميم الجداول في Amazon Redshift؟",
+                keywords: [
+                    { text: "نمط KEY: يضع الصفوف التي لها نفس مفتاح الـ Join (مثل customer_id) على نفس الـ Node لمنع نقل البيانات عبر الشبكة", correct: true },
+                    { text: "نمط ALL: ينسخ جدول الـ Dimension الصغير بالكامل على كل العقد لتسريع ربطه بجدول الـ Fact", correct: true },
+                    { text: "نمط EVEN: يوزع الصفوف بالتساوي بطريقة دائرية (Round-Robin) عندما لا يوجد عمود Join واضح", correct: true },
+                    { text: "الهدف الأساسي هو تقليل حركة البيانات عبر الشبكة (Data Redistribution) أثناء الـ Join", correct: true },
+                    { text: "فخ خاطئ: استخدام نمط ALL مع جدول الـ Fact الضخم الذي يحتوي على مليارات الصفوف", correct: false },
+                    { text: "فخ خاطئ: استخدام نمط KEY على عمود يحتوي على 90% قيم NULL مما يسبب Skew", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh3", subject: "DWH", badge: "Data Warehousing 3/10",
+                title: "3. التعامل الهندسي مع تغير هيكل المصدر (Schema Drift)",
+                fullAnswer: `• ماذا نفعل إذا أضاف المصدر عموداً جديداً أو غيّر نوع بيانات بعض السجلات فجأة (Schema Drift)؟
+  1. تحديد أسماء وأنواع الأعمدة صراحةً في الكود وعدم الاعتماد على SELECT * (مع فحص required_cols.issubset في Python).
+  2. تخزين البيانات الخام في طبقة هبوط أولية مرنة (Bronze / Staging) قبل التحويل.
+  3. عزل السجلات المخالفة للـ Schema في جدول جانبي (Quarantine / Dead-Letter Table) مع إرسال تنبيه آلي لفريق البيانات دون إسقاط المسار بالكامل.`,
+                question: "يسألك المحاور: كيف تصمم ETL Pipeline قوي لا ينهار إذا أضاف المصدر عموداً جديداً أو غيّر نوع بيانات بعض السجلات فجأة؟",
+                keywords: [
+                    { text: "تحديد أسماء وأنواع الأعمدة صراحةً في الكود وعدم الاعتماد على SELECT *", correct: true },
+                    { text: "تخزين البيانات الخام في طبقة هبوط أولية مرنة (Bronze / Staging) قبل التحويل", correct: true },
+                    { text: "عزل السجلات المخالفة للـ Schema في جدول جانبي (Quarantine / Dead-Letter Table)", correct: true },
+                    { text: "إرسال تنبيه آلي (Alert) لفريق البيانات دون إسقاط المسار بالكامل", correct: true },
+                    { text: "فخ خاطئ: استخدام SELECT * دائماً لقبول أي أعمدة عشوائية في جدول الـ Gold مباشرة", correct: false },
+                    { text: "فخ خاطئ: حذف السجلات التالفة بصمت دون تسجيلها أو إرسال تنبيه", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh4", subject: "DWH", badge: "Data Warehousing 4/10",
+                title: "4. ضمان عدم تكرار البيانات عند إعادة التشغيل (Idempotency)",
+                fullAnswer: `• معنى Idempotency: ضمان أن إعادة تشغيل الـ Pipeline لنفس اليوم عدة مرات يعطي نفس النتيجة تماماً دون مضاعفة الأرقام.
+• كيف نطبقه عملياً؟
+  1. مسح بارتيشن اليوم المستهدف قبل الكتابة (DELETE-INSERT أو Overwrite Partition).
+  2. أو استخدام جملة MERGE INTO (Upsert) التي تحدث السجل إذا كان المفتاح موجوداً وتضيفه فقط إذا كان جديداً.
+  3. تمرير تاريخ التشغيل كباراميتر (Execution Date Parameter) بدلاً من الاعتماد على CURRENT_DATE() حتى نتمكن من عمل Backfill لأي يوم سابق بأمان.`,
+                question: "يسألك المحاور: تعطل الـ Pipeline اليومي في منتصف التشغيل وأعدنا تشغيله مرتين. كيف تضمن عدم تضاعف أرقام المبيعات (Idempotency)؟",
+                keywords: [
+                    { text: "تطبيق نمط DELETE-INSERT أو Overwrite Partition لمسح بارتيشن اليوم قبل إعادة الكتابة", correct: true },
+                    { text: "استخدام MERGE INTO (Upsert) بناءً على المفتاح الأساسي لتحديث الموجود وإضافة الجديد فقط", correct: true },
+                    { text: "تمرير تاريخ التشغيل كمتغير (Execution Date Parameter) بدلاً من CURRENT_DATE لدعم الـ Backfill", correct: true },
+                    { text: "وضع عملية الحذف والإدراج داخل Transaction واحدة لضمان عدم قراءة بيانات ناقصة", correct: true },
+                    { text: "فخ خاطئ: استخدام INSERT INTO المباشر (Append) في كل مرة يعاد فيها تشغيل الـ Job", correct: false },
+                    { text: "فخ خاطئ: مسح الجدول التاريخي بالكامل (TRUNCATE) وإعادة تحميل 5 سنوات يومياً", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh5", subject: "DWH", badge: "Data Warehousing 5/10",
+                title: "5. تتبع التغيرات التاريخية للأبعاد (SCD Type 1 vs Type 2 vs Type 3)",
+                fullAnswer: `• أبعاد التغير البطيء (Slowly Changing Dimensions - SCD): ماذا نفعل لو انتقل العميل أو البائع من مدينة "القاهرة" إلى "الرياض"؟
+  1. SCD Type 1 (الكتابة الفوقية Overwrite): نحدث المدينة إلى "الرياض" فوق القيمة القديمة بدون حفظ التاريخ (تستخدم لتصحيح الأخطاء الإملائية؛ عيبها أنها تنسب مبيعات القاهرة التاريخية للرياض!).
+  2. SCD Type 2 (حفظ التاريخ الكامل بإضافة صف جديد — الأكثر استخداماً في أمازون): نغلق الصف القديم بـ end_date و is_current = False، ونضيف صفاً جديداً للعميل بمفتاح بديل جديد (Surrogate Key) و start_date جديد و is_current = True.
+  3. SCD Type 3 (إضافة عمود): نضيف عمود prev_city بجانب current_city (يحفظ آخر تغيير واحد فقط).`,
+                question: "يسألك المحاور: غيّر بائع في أمازون فئته أو مدينته، ونريد أن تظل مبيعاته القديمة مسجلة على مدينته القديمة والجديدة على الجديدة. أي نوع SCD تختار وكيف تصممه؟",
+                keywords: [
+                    { text: "اختيار SCD Type 2 لأنه يحفظ التاريخ الكامل عبر إضافة صف جديد لكل تغيير", correct: true },
+                    { text: "استخدام مفتاح بديل (Surrogate Key) في جدول الـ Dimension وربطه بجدول الـ Fact", correct: true },
+                    { text: "إضافة أعمدة start_date و end_date وعلم is_current (True/False) لتحديد السجل النشط", correct: true },
+                    { text: "استخدام SCD Type 1 فقط عند تصحيح الأخطاء الإملائية التي لا نحتاج لحفظ تاريخها", correct: true },
+                    { text: "فخ خاطئ: استخدام SCD Type 1 لتتبع تاريخ تنقلات العميل عبر السنوات", correct: false },
+                    { text: "فخ خاطئ: جعل customer_id الأصلي هو الـ Primary Key الوحيد في جدول SCD Type 2", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh6", subject: "DWH", badge: "Data Warehousing 6/10",
+                title: "6. معالجة البيانات الضخمة في PySpark وحل مشكلة Data Skew",
+                fullAnswer: `• ما هو الـ Data Skew في Spark / Redshift؟ عندما يتركز 80% من البيانات في مفتاح واحد (مثلاً seller_id خاص بأمازون نفسها أو قيم NULL)، فتعمل عقدة واحدة (Worker Node) لساعات وتتعطل بـ Out Of Memory بينما باقي العقد خاملة (Straggler Task).
+• كيف نحل مشكلة الـ Data Skew؟
+  1. Broadcast Join: إذا كان أحد الجدولين صغيراً، نرسله كاملاً لكل العقد ليتم الدمج محلياً بدون Shuffle.
+  2. Key Salting: إضافة رقم عشوائي صغير (مثلاً من 1 إلى 10) للمفتاح المتضخم لتوزيعه على 10 عقد بالتساوي.
+  3. فلترة قيم NULL أو معالجتها بشكل منفصل قبل عمل الـ Join، وتخزين البيانات بصيغة عمودية مضغوطة (Parquet / ORC).`,
+                question: "يسألك المحاور: لديك Job في Spark أو استعلام موزع يتوقف دائماً عند 99% بسبب أن بائعاً واحداً يمتلك نصف المبيعات (Data Skew). كيف تحل هذه المشكلة؟",
+                keywords: [
+                    { text: "استخدام Broadcast Join إذا كان الجدول الثاني صغيراً لتجنب عملية الـ Shuffle تماماً", correct: true },
+                    { text: "تطبيق تقنية Key Salting (إضافة بادئة عشوائية 1..N للمفتاح المزدحم) لتوزيع الحمل على العقد", correct: true },
+                    { text: "استبعاد أو فصل مفاتيح الـ NULL قبل الـ Join لأنها تتجمع في بارتيشن واحد", correct: true },
+                    { text: "حفظ البيانات بصيغة عمودية مضغوطة مثل Parquet مع تفعيل Adaptive Query Execution (AQE)", correct: true },
+                    { text: "فخ خاطئ: تخزين ملفات المليارات بصيغة CSV غير مضغوطة بدلاً من Parquet", correct: false },
+                    { text: "فخ خاطئ: جمع كل البيانات على عقدة واحدة بـ collect() في PySpark لحل المشكلة", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh7", subject: "DWH", badge: "Data Warehousing 7/10 (فيديو ScSPGGRDQks)",
+                title: "7. ضمان دقة وجودة البيانات 100% في خطوط الـ BI",
+                fullAnswer: `• كيف تضمن أن الأرقام المعروضة للإدارة في لوحة التحكم صحيحة 100% قبل نشرها؟
+  1. مطابقة المصدر (Source-to-Target Reconciliation): مقارنة إجمالي المبيعات وعدد الصفوف في جدول الـ Fact النهائي مع جداول المصدر الخام.
+  2. فحص عدم تضاعف الصفوف بعد الـ Joins (Fan-out Check): التأكد من أن عدد الصفوف ومجموع المبيعات لم يتضاعف بعد عمل LEFT JOIN.
+  3. بوابات الفحص الآلي (Automated Data Quality Gates / dbt tests): فحص عدم وجود NULL في المفاتيح الأساسية، وفحص تفرد الـ Primary Key، واكتشاف القفزات الشاذة (Anomaly Detection مقارنة بمتوسط آخر 7 أيام).`,
+                question: "يسألك المحاور: بنيت Dashboard جديدة لنائب الرئيس (VP). ما هي خطوات الفحص الهندسية التي تطبقها لضمان دقة البيانات 100% وعدم وجود أرقام مضاعفة؟",
+                keywords: [
+                    { text: "مطابقة الإجماليات (Source Reconciliation) بين المصدر الخام والجدول النهائي", correct: true },
+                    { text: "فحص عدم تضاعف الصفوف (Row Count & Sum Check) قبل وبعد عمليات الـ JOIN لمنع الـ Fan-out", correct: true },
+                    { text: "بناء اختبارات آلية (Uniqueness, Not Null, Freshness SLA) قبل تحديث الـ Dashboard", correct: true },
+                    { text: "مقارنة الأرقام مع التقارير المالية المعتمدة (Single Source of Truth) لاكتشاف أي انحراف", correct: true },
+                    { text: "فخ خاطئ: نشر اللوحة للـ VP مباشرة والاعتماد على المستخدمين في اكتشاف الأخطاء", correct: false },
+                    { text: "فخ خاطئ: إخفاء الفروقات الرقمية بفلتر يدوي داخل الـ Dashboard دون إصلاح الـ ETL", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh8", subject: "DWH", badge: "Data Warehousing 8/10",
+                title: "8. منظومة خدمات AWS لهندسة وتحليل البيانات",
+                fullAnswer: `• كيف تتكامل خدمات AWS لبناء مسار بيانات حديث (Modern Data Architecture) في أمازون؟
+  1. Amazon S3: بحيرة البيانات (Data Lake) لتخزين الملفات الخام والمعالجة (Parquet) بتكلفة منخفضة.
+  2. AWS Glue & Glue Data Catalog: خدمة Serverless ETL (تعمل بـ Python/Spark) لتنظيف البيانات وفهرسة الـ Metadata.
+  3. Amazon Athena: خدمة استعلام تفاعلي بـ SQL مباشرة فوق ملفات S3 بدون خوادم (Serverless) للتحليل السريع.
+  4. Amazon Redshift: مستودع البيانات العمودي (Data Warehouse) للاستعلامات المعقدة عالية الأداء، و Amazon QuickSight لبناء لوحات التحكم.`,
+                question: "يسألك المحاور: تصل ملفات بيانات يومية على Amazon S3، ونريد بناء Pipeline ينظفها ويدخلها في مستودع البيانات ويعرضها في Dashboard. كيف توظف خدمات AWS؟",
+                keywords: [
+                    { text: "تخزين البيانات الخام والمعالجة بصيغة Parquet على Amazon S3 (Data Lake)", correct: true },
+                    { text: "استخدام AWS Glue (أو EMR) لعمل ETL وتحديث Glue Data Catalog", correct: true },
+                    { text: "استخدام Amazon Athena للاستعلام السريع المباشر فوق S3، و Redshift كمستودع بيانات رئيسي", correct: true },
+                    { text: "ربط Amazon QuickSight (أو Power BI/Tableau) بطبقة الـ Gold لعرض لوحات التحكم", correct: true },
+                    { text: "فخ خاطئ: استخدام قاعدة بيانات OLTP مثل RDS لقراءة مليارات الصفوف التحليلية بدلاً من Redshift", correct: false },
+                    { text: "فخ خاطئ: تشغيل خوادم EC2 ضخمة طوال اليوم بدون حاجة بدلاً من خدمات Serverless", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh9", subject: "DWH", badge: "Data Warehousing 9/10 (الرابط الرسمي)",
+                title: "9. فخاخ SQL الهندسية: ON vs WHERE، وحساب M×N، والفرق بين CTE و Temp Table",
+                fullAnswer: `• 3 أسئلة كلاسيكية في مقابلة Working with SQL في أمازون:
+  1. شرط الـ LEFT JOIN في ON مقابل WHERE: وضع شرط الجدول الأيمن (مثل AND r.status = 'Approved') داخل ON يحتفظ بصفوف الجدول الأيسر ويعطي NULL لغير المطابق؛ أما وضعه في WHERE فيحذف الـ NULL ويحول الـ LEFT JOIN إلى INNER JOIN بالخطأ!
+  2. عدد صفوف الـ Joins: لو الجدول الأول فيه 3 صفوف بقيمة المفتاح (1) والجدول الثاني فيه 4 صفوف بنفس المفتاح (1)، فإن الناتج هو حاصل الضرب الديكارتي للمفتاح المكرر: 3 × 4 = 12 صفاً!
+  3. CTE مقابل Temp Table مقابل Materialized View: الـ CTE منطقي فقط لتحسين القراءة ولا يخزن على القرص؛ أما الـ Temp Table فيخزن فعلياً في الذاكرة/القرص طوال الجلسة ويفيد عند إعادة استخدام النتيجة عدة مرات؛ والـ Materialized View يحفظ النتيجة مسبقاً لتسريع لوحات التحكم.`,
+                question: "يسألك المحاور: ماذا يحدث لو وضعنا شرط الجدول الأيمن في WHERE بدلاً من ON مع LEFT JOIN؟ ومتى تفضل Temp Table أو Materialized View على الـ CTE؟",
+                keywords: [
+                    { text: "وضع شرط الجدول الأيمن في WHERE يحذف القيم الـ NULL فيحول الـ LEFT JOIN إلى INNER JOIN", correct: true },
+                    { text: "الحل الصحيح هو وضع شرط فلترة الجدول الأيمن داخل جملة ON للحفاظ على كل صفوف الجدول الأيسر", correct: true },
+                    { text: "استخدام Temp Table عندما نحتاج للإشارة لنفس الجدول الوسيط عدة مرات في استعلام ضخم", correct: true },
+                    { text: "استخدام Materialized View لحفظ التجميعات الثقيلة مسبقاً لتسريع استجابة الـ Dashboards", correct: true },
+                    { text: "فخ خاطئ: الـ CTE يخزن البيانات دائماً على القرص الصلب ويبني Indexes تلقائياً", correct: false },
+                    { text: "فخ خاطئ: دمج 3 صفوف متكررة مع 4 صفوف متكررة لنفس المفتاح يعطي 7 صفوف فقط", correct: false }
+                ]
+            },
+            {
+                id: "fc_dwh10", subject: "DWH", badge: "Data Warehousing 10/10",
+                title: "10. نمذجة البيانات (Star Schema vs Snowflake Schema) وتحديد الـ Grain",
+                fullAnswer: `• كيف نصمم Data Model لمبيعات أمازون أو شحناتها (Dimensional Modeling)؟
+  1. الخطوة الأولى دائماً هي تحديد الـ Grain (وحدة الصف في جدول الـ Fact): مثلاً "صف واحد لكل منتج داخل كل طلب (Order Line Item)".
+  2. جدول الحقائق (Fact Table): يحتوي على الأرقام القابلة للجمع (price, qty, shipping_fee) والمفاتيح الأجنبية (Foreign Keys).
+  3. جداول الأبعاد (Dimension Tables): تحتوي على الصفات النصية والوصفية (dim_customer, dim_product, dim_date, dim_seller).
+  4. لماذا نفضل Star Schema على Snowflake Schema في الـ BI؟ لأن الـ Star Schema تجعل الأبعاد غير مطبعة (Denormalized) في جدول واحد لكل بُعد، مما يقلل عدد الـ Joins ويسرع استعلامات الـ Dashboards.`,
+                question: "يسألك المحاور: نريد بناء Data Mart لتتبع عمليات الشحن والمبيعات في أمازون. كيف تصمم الـ Star Schema ولماذا نفضلها في الـ BI على الـ Snowflake Schema؟",
+                keywords: [
+                    { text: "البدء بتحديد الـ Grain بدقة (ماذا يمثل الصف الواحد في جدول الـ Fact)", correct: true },
+                    { text: "وضع المقاييس الرقمية والمفاتيح في جدول الـ Fact، والصفات الوصفية في جداول الـ Dimensions", correct: true },
+                    { text: "تفضيل Star Schema في التحليلات لأنها تقلل عدد الـ Joins وتسرع أداء استعلامات الـ BI", correct: true },
+                    { text: "ربط الجداول بمفاتيح بديلة رقمية (Surrogate Integer Keys) بدلاً من النصوص الطويلة", correct: true },
+                    { text: "فخ خاطئ: خلط مقاييس بـ Grain مختلف (مثل مبيعات اليوم ومبيعات الشهر) في نفس جدول الـ Fact", correct: false },
+                    { text: "فخ خاطئ: تطبيع الجداول إلى 3NF في طبقة العرض النهائية مما يجبر المحلل على عمل 15 Join", correct: false }
+                ]
+            },
+
+            // ================= TAB 5: STATISTICS, A/B TESTING & REGRESSION (5 UNITS) =================
+            {
+                id: "fc_st1", subject: "STATS", badge: "Statistics & A/B 1/5",
+                title: "1. المتوسط (Mean) مقابل الوسيط (Median) في البيانات الملتوية (Skewed Data)",
+                fullAnswer: `• متى نخدع لو اعتمدنا على المتوسط الحسابي (Mean) وحده في أمازون؟
+  1. في البيانات الملتوية لليمين (Right-Skewed Data) التي تحتوي على قيم متطرفة عالية (Outliers) مثل: إنفاق العملاء، أسعار المنتجات، أو زمن التوصيل (Delivery Time).
+  2. لو 99 شحنة وصلت في يومين، وشحنة واحدة تعثرت في الجمارك واستغرقت 100 يوم، فإن المتوسط سيرتفع بشكل مضلل، بينما الوسيط (Median / P50) يظل يومين لأنه لا يتأثر بالقيم المتطرفة!
+  3. الحل الاحترافي في أمازون: عرض الوسيط (Median / P50) للأداء المعتاد، مع المئين التسعين أو الخامس والتسعين (P90 / P95) لمراقبة أسوأ حالات التأخير التي يعاني منها العملاء.`,
+                question: "يسألك المحاور: نراقب زمن توصيل الشحنات في أمازون، ولاحظنا أن بعض الشحنات النادرة تتأخر 30 يوماً بسبب الطقس. هل نعتمد على الـ Mean أم الـ Median ولماذا؟",
+                keywords: [
+                    { text: "استخدام الوسيط (Median / P50) لأن البيانات ملتوية لليمين (Right-Skewed) وبها قيم شاذة (Outliers)", correct: true },
+                    { text: "المتوسط الحسابي (Mean) يتأثر بشدة بالقيم المتطرفة ويسحب الرقم للأعلى بشكل مضلل", correct: true },
+                    { text: "متابعة المئين P90 أو P95 بجانب الـ Median لمراقبة حالات التأخير القصوى (Tail Latency)", correct: true },
+                    { text: "استخدام الـ Box Plot أو Histogram لعرض التوزيع بدلاً من الاكتفاء برقم متوسط واحد", correct: true },
+                    { text: "فخ خاطئ: الاعتماد على الـ Mean فقط لأنه مقاوم للقيم المتطرفة ولا يتأثر بها", correct: false },
+                    { text: "فخ خاطئ: حذف كل الشحنات المتأخرة نهائياً من قاعدة البيانات حتى يتحسن شكل التقرير", correct: false }
+                ]
+            },
+            {
+                id: "fc_st2", subject: "STATS", badge: "Statistics & A/B 2/5",
+                title: "2. تصميم تجربة A/B Testing من الصفر (Primary vs Guardrail Metrics)",
+                fullAnswer: `• كيف تصمم تجربة A/B Test في أمازون (مثلاً لتجربة زر Checkout جديد بضغطة واحدة)؟
+  1. صياغة الفرضية: الفرضية الصفرية (H0: لا يوجد فرق في معدل التحويل بين الزر القديم والجديد) والفرضية البديلة (H1: الزر الجديد يرفع التحويل).
+  2. تحديد المؤشرات الثلاثة:
+     - المؤشر الأساسي (Primary / Success Metric): معدل إتمام الشراء (Conversion Rate).
+     - مؤشر الحماية (Guardrail Metric): معدل إلغاء الطلبات أو المرتجعات أو زمن تحميل الصفحة (لضمان أن الزر السريع لا يسبب طلبات بالخطأ!).
+  3. حساب حجم العينة (Sample Size) ومدة التجربة مسبقاً بناءً على: خط الأساس (Baseline Conversion)، وأقل أثر نريد رصده (MDE)، ومستوى الدلالة (Alpha = 0.05)، والقوة الإحصائية (Power = 80%)، وتشغيلها لمدة أسبوعين كاملين لتغطية دورة أيام الأسبوع وعطلة نهاية الأسبوع.`,
+                question: "يسألك المحاور: يريد فريق المنتج إطلاق ميزة 'الشراء بضغطة واحدة' في صفحة المنتج. كيف تصمم تجربة A/B Test لتقييمها وما هي المؤشرات التي تراقبها؟",
+                keywords: [
+                    { text: "تحديد Primary Metric واضح (مثل Conversion Rate) و Guardrail Metric (مثل معدل الإلغاء/المرتجعات)", correct: true },
+                    { text: "تحديد الفرضية الصفرية H0 وحساب حجم العينة (Sample Size) مسبقاً بناءً على MDE و Power 80%", correct: true },
+                    { text: "تقسيم المستخدمين عشوائياً (Randomization على مستوى User ID) لمنع التداخل", correct: true },
+                    { text: "تشغيل التجربة لدورة زمنية كاملة (أسبوع إلى أسبوعين) لتجنب تحيز أيام الأسبوع (Day-of-Week Effect)", correct: true },
+                    { text: "فخ خاطئ: إيقاف التجربة بعد ساعتين فقط بمجرد رؤية ارتفاع أولي في الأرقام (Peeking)", correct: false },
+                    { text: "فخ خاطئ: مراقبة عدد النقرات فقط دون وضع Guardrail Metric لمراقبة الإلغاءات والمرتجعات", correct: false }
+                ]
+            },
+            {
+                id: "fc_st3", subject: "STATS", badge: "Statistics & A/B 3/5",
+                title: "3. تفسير نتائج A/B Testing وفخاخها (p-value, Novelty Effect, Simpson's Paradox)",
+                fullAnswer: `• كيف نفسر النتائج وما هي الفخاخ الشهيرة التي يسأل عنها محاورو أمازون؟
+  1. معنى p-value < 0.05: احتمالية الحصول على هذا الفرق بالصدفة البحتة (بافتراض صحة H0) أقل من 5%، فنرفض H0 ونعلن أن النتيجة ذات دلالة إحصائية (Statistically Significant).
+  2. الدلالة الإحصائية مقابل الأهمية العملية (Practical Significance): قد تكون الزيادة +0.01% ذات دلالة إحصائية لأن العينة 50 مليون مستخدم، لكنها لا تغطي تكلفة صيانة الميزة هندسياً!
+  3. فخ تأثير الحداثة (Novelty Effect): يضغط المستخدمون على الزر الجديد بدافع الفضول في أول يومين ثم يعودون لطبيعتهم (نكشفه بمتابعة شريحة المستخدمين القدامى عبر الزمن).
+  4. مفارقة سيمبسون (Simpson's Paradox): عندما يظهر اتجاه إيجابي في البيانات المجمعة، لكنه ينعكس عند تقسيم البيانات حسب الفئة (مثلاً الموبايل مقابل الديسكتوب) بسبب اختلاف أوزان الزيارات.`,
+                question: "يسألك المحاور: أظهرت تجربة A/B ارتفاعاً كبيراً في أول يومين ثم بدأ يتلاشى، أو أظهرت p-value = 0.01 بزيادة 0.02% فقط مع تكلفة هندسية عالية. كيف تحلل الموقف؟",
+                keywords: [
+                    { text: "الارتفاع المؤقت في البداية يسمى Novelty Effect (تأثير الفضول والحداثة) ولذلك لا نتسرع في الإطلاق", correct: true },
+                    { text: "الموازنة بين الدلالة الإحصائية (p-value < 0.05) والأهمية العملية والتجارية (Practical Significance / ROI)", correct: true },
+                    { text: "فحص البيانات على مستوى الشرائح (الموبايل vs الديسكتوب) لتجنب مفارقة سيمبسون (Simpson's Paradox)", correct: true },
+                    { text: "التأكد من عدم وجود Sample Ratio Mismatch (SRM) في توزيع عينتي التحكم والتجربة (50%/50%)", correct: true },
+                    { text: "فخ خاطئ: p-value = 0.03 تعني أن هناك احتمال 97% أن الكود خالٍ من الأخطاء البرمجية", correct: false },
+                    { text: "فخ خاطئ: إطلاق أي ميزة فوراً طالما p-value < 0.05 حتى لو كانت تكلفتها أعلى من عائدها", correct: false }
+                ]
+            },
+            {
+                id: "fc_st4", subject: "STATS", badge: "Statistics & A/B 4/5 (فيديو Julie [03:42])",
+                title: "4. نماذج الانحدار (Linear vs Logistic Regression) وتفسير R² و Multicollinearity",
+                fullAnswer: `• ذكرت Julie في الفيديو الرسمي ضرورة الاستعداد لأسئلة Regression Models:
+  1. متى نستخدم Linear مقابل Logistic Regression؟
+     - Linear Regression: للتنبؤ بقيمة رقمية مستمرة (مثل إجمالي مبيعات الشهر القادم، أو سعر المنتج، أو مدة التوصيل بالدقائق).
+     - Logistic Regression: للتنبؤ باحتمالية حدث ثنائي (0 أو 1) مثل (هل سيلغي العميل اشتراك Prime؟ Churn، أو هل المعاملة احتيالية؟ Fraud).
+  2. كيف نقيم النموذج؟
+     - معامل التحديد (R² في الانحدار الخطي): يوضح نسبة التباين في المبيعات التي يفسرها النموذج (مثلاً R² = 0.75 يعني أن النموذج يفسر 75% من تغير المبيعات).
+     - p-value لكل متغير مستقل: إذا كانت أقل من 0.05 فهذا المتغير له تأثير حقيقي على المبيعات.
+  3. فخ التعدد الخطي (Multicollinearity): وضع متغيرين مستقلين مرتبطين ببعضهما بشدة في نفس النموذج (مثل "عدد الطلبات" و"إجمالي رسوم الشحن") يشوه قيم المعاملات، ونكشفه بمعامل تضخم التباين (VIF > 5).`,
+                question: "يسألك المحاور: متى تستخدم Linear Regression مقابل Logistic Regression في أمازون؟ وكيف تفسر R² و p-value وتتعامل مع Multicollinearity؟",
+                keywords: [
+                    { text: "Linear Regression للتنبؤ بقيمة رقمية مستمرة (كالمبيعات)، و Logistic Regression للتصنيف الثنائي (كالـ Churn)", correct: true },
+                    { text: "معامل R² يقيس نسبة التباين في المتغير التابع التي تنجح المتغيرات المستقلة في تفسيرها", correct: true },
+                    { text: "p-value لكل متغير تختبر هل تأثير هذا المتغير على النتيجة حقيقي أم مجرد صدفة", correct: true },
+                    { text: "فحص Multicollinearity باستخدام VIF وحذف أو دمج المتغيرات المستقلة المترابطة بشدة", correct: true },
+                    { text: "فخ خاطئ: استخدام Linear Regression للتنبؤ باحتمالية (0 أو 1) لأن مخرجاته قد تتجاوز 1 أو تقل عن 0", correct: false },
+                    { text: "فخ خاطئ: إضافة 100 متغير عشوائي للنموذج لأن زيادة R² دائماً تعني نموذجاً أفضل بدون Overfitting", correct: false }
+                ]
+            },
+            {
+                id: "fc_st5", subject: "STATS", badge: "Statistics & A/B 5/5",
+                title: "5. تقييم نماذج التصنيف (Precision vs Recall) في اكتشاف الاحتيال والمنتجات",
+                fullAnswer: `• الفرق الجوهري بين Precision (الدقة) و Recall (الاستدعاء / الشمول):
+  1. Precision = TP / (TP + FP): من بين كل الحالات التي قال النموذج أنها إيجابية، كم منها إيجابي فعلاً؟ (نركز عليها عندما تكون عقوبة الإنذار الكاذب False Positive عالية جداً، مثل حظر حساب بائع شرعي أو دمج منتجين مختلفين بالخطأ!).
+  2. Recall = TP / (TP + FN): من بين كل الحالات الإيجابية الحقيقية في الواقع، كم منها نجح النموذج في اصطياده؟ (نركز عليها عندما تكون عقوبة تفويت الحالة False Negative كارثية، مثل تمرير عملية سرقة بطاقة ائتمان أو منتج خطر غير آمن!).`,
+                question: "يسألك المحاور: في نظام كشف المعاملات الاحتيالية أو حظر حسابات البائعين في أمازون، متى تعطي الأولوية لـ Precision ومتى تعطيها لـ Recall؟",
+                keywords: [
+                    { text: "التركيز على Precision عندما تكون تكلفة الخطأ الإيجابي الكاذب (False Positive) عالية مثل إغلاق حساب بائع بريء", correct: true },
+                    { text: "التركيز على Recall عندما تكون تكلفة تفويت الحالة (False Negative) خطيرة مثل المنتجات الممنوعة أو الاحتيال المالي", correct: true },
+                    { text: "استخدام F1-Score أو PR-AUC للموازنة بينهما في البيانات غير المتوازنة (Imbalanced Data)", correct: true },
+                    { text: "ضبط الـ Threshold: رفع العتبة لـ 95% للقرارات الآلية، وإرسال الحالات المتوسطة للمراجعة البشرية", correct: true },
+                    { text: "فخ خاطئ: الاعتماد على Accuracy فقط عندما تكون نسبة الاحتيال 0.1% من البيانات", correct: false },
+                    { text: "فخ خاطئ: خفض الـ Threshold إلى 10% لزيادة الـ Precision", correct: false }
+                ]
+            },
+
+            // ================= TAB 6: BUSINESS, DASHBOARDS & CASE STUDIES (6 UNITS) =================
+            {
+                id: "fc_biz1", subject: "BIZ", badge: "Business & Cases 1/6 (فيديو Julie [02:51])",
+                title: "1. مصفوفة اختيار الرسوم البيانية للمديرين وقواعد تصميم Executive Dashboard",
+                fullAnswer: `• في فيديو التحضير الرسمي، أكدت Julie على سؤال: "ما هو أفضل رسم بياني لعرض هذه البيانات لمدير ولماذا؟":
+  1. Line Chart (الرسم الخطي): لتتبع الاتجاهات عبر الزمن (Trends over Time) مثل مبيعات آخر 12 شهراً.
+  2. Bar Chart (الأعمدة الأفقية أو الرأسية): للمقارنة الدقيقة بين الفئات (Category Comparison) مثل مبيعات أعلى 10 فئات.
+  3. Box Plot / Histogram: لعرض توزيع البيانات والوسيط والقيم المتطرفة (Outliers & Skewness) مثل زمن الشحن.
+  4. Scatter Plot: لاكتشاف العلاقة والارتباط بين متغيرين رقميين (مثل السعر مقابل التقييم)، و Funnel Chart لمراحل رحلة العميل.
+  5. لماذا نتجنب Pie Chart؟ لأن العين البشرية تخطئ في مقارنة الزوايا والمساحات الدائرية خصوصاً لو زادت الفئات عن 3، والبديل الأفضل دائماً هو Horizontal Bar Chart مرتب تنازلياً!`,
+                question: "يسألك المحاور: طلب منك مدير منتج رسم Pie Chart لعرض مبيعات 12 فئة منتجات مع تتبع نموها الشهري في لوحة تحكم. ماذا تقترح عليه ولماذا؟",
+                keywords: [
+                    { text: "استبدال الـ Pie Chart بـ Bar Chart مرتب تنازلياً لأن العين تقارن الأطوال بدقة أعلى من الزوايا", correct: true },
+                    { text: "استخدام Line Chart لعرض اتجاه النمو الشهري (Trend over Time) بوضوح", correct: true },
+                    { text: "وضع بطاقات المؤشرات الرئيسية (KPI Cards مع نسبة التغير MoM/YoY) في أعلى اللوحة (قاعدة الـ 5 ثوانٍ)", correct: true },
+                    { text: "استخدام ألوان هادئة وتخصيص اللون الأحمر/البرتقالي فقط لتنبيهات الانحراف (Pre-attentive Attributes)", correct: true },
+                    { text: "فخ خاطئ: استخدام Pie Chart ثلاثي الأبعاد (3D Pie Chart) يضم 12 شريحة ملونة", correct: false },
+                    { text: "فخ خاطئ: وضع 25 رسماً بيانياً وجدولاً خاماً في شاشة واحدة بدون تسلسل بصري", correct: false }
+                ]
+            },
+            {
+                id: "fc_biz2", subject: "BIZ", badge: "Business & Cases 2/6",
+                title: "2. منهجية التحقيق في هبوط مفاجئ للمبيعات بنسبة 15% (Metric Drop Investigation)",
+                fullAnswer: `• عندما يقول لك المحاور: "هبطت مبيعات أمازون (GMV) أمس بنسبة 15%، كيف تحقق في السبب؟"، امشِ بترتيب الـ 4 خطوات المنظمة:
+  1. الفحص التقني وصحة البيانات أولاً (Data Integrity & Pipeline Check): هل تأخر الـ ETL Job؟ هل هناك بيانات ناقصة أو تغيير في معادلة الحساب؟
+  2. تفكيك المعادلة الرياضية (Metric Decomposition):
+     GMV = عدد الزوار (Traffic) × معدل التحويل (Conversion Rate) × متوسط قيمة السلة (AOV). أي عنصر من الثلاثة هو الذي هبط؟
+  3. التقسيم الداخلي (Internal Segmentation): تقسيم الهبوط حسب المنصة (iOS vs Android vs Web)، المنطقة الجغرافية، فئة المنتج، وطريقة الدفع (ربما تحديث لتطبيق iOS عطل زر الدفع!).
+  4. العوامل الخارجية والموسمية (External & Seasonality): مقارنة الأمس بنفس اليوم من الأسبوع الماضي والعام الماضي (هل كان هناك عطلة رسمية، انتهاء مهرجان تخفيضات White Friday، أو عطل في بوابة دفع خارجية؟).`,
+                question: "يسألك المحاور: دخلت المكتب صباحاً فوجدت أن إجمالي المبيعات (GMV) انخفض بنسبة 15% مقارنة بالأمس. كيف تقود التحقيق خطوة بخطوة للوصول للسبب الجذري؟",
+                keywords: [
+                    { text: "التحقق أولاً من سلامة البيانات والـ ETL Pipeline للتأكد من أن الهبوط حقيقي وليس تأخراً في التحميل", correct: true },
+                    { text: "تفكيك معادلة المبيعات (GMV = Traffic × Conversion Rate × AOV) لتحديد المحرك المسؤول عن الهبوط", correct: true },
+                    { text: "تقسيم البيانات داخلياً (حسب الدولة، الفئة، نوع الجهاز iOS/Android، وقمع الشراء Funnel)", correct: true },
+                    { text: "فحص العوامل الموسمية والخارجية (مقارنة YoY/WoW، انتهاء حملة، أو عطل بوابة دفع)", correct: true },
+                    { text: "فخ خاطئ: افتراض أن فريق التسويق هو السبب فوراً دون فحص البيانات أو تقسيمها", correct: false },
+                    { text: "فخ خاطئ: مقارنة يوم عمل عادي بيوم الذروة في Prime Day دون مراعاة الموسمية", correct: false }
+                ]
+            },
+            {
+                id: "fc_biz3", subject: "BIZ", badge: "Business & Cases 3/6 (فيديو 5ZaYUgPxs_w)",
+                title: "3. كيس ستادي أمازون: اكتشاف ودمج المنتجات المكررة (Duplicate Products)",
+                fullAnswer: `• من أشهر أسئلة الـ Case Study في مقابلات BIE: "يضيف البائعون نفس المنتج بأسماء مختلفة قليلاً مثل 'iPhone X 64GB' و 'Apple iPhone 10 - 64 GB' بدون رقم SKU موحد. كيف تصمم نظاماً لاكتشافها ودمجها؟":
+  1. تقليص نطاق المقارنة (Blocking): بدلاً من مقارنة مليار منتج بمليار منتج، نقارن فقط المنتجات الموجودة داخل نفس الفئة الفرعية ونفس العلامة التجارية ونفس النطاق السعري (±20%).
+  2. استخراج خصائص التشابه (Feature Engineering):
+     - تشابه النصوص (Title & Specs Similarity) باستخدام TF-IDF أو Cosine Similarity أو Embeddings بعد توحيد النصوص.
+     - تشابه الصور (Image Hashing / CNN Embeddings).
+  3. تحديد عتبة القرار (Thresholding مع الأولوية لـ Precision):
+     - تشابه > 95%: دمج آلي (Auto-Merge).
+     - تشابه بين 75% و 95%: إرسال لطابور مراجعة بشرية (Human-in-the-loop) لأن دمج منتجين مختلفين بالخطأ يدمر تجربة العميل!`,
+                question: "يسألك المحاور: كيف تصمم حلاً تحليلياً وهندسياً لاكتشاف المنتجات المكررة في كتالوج أمازون عندما يكتب البائعون أسماء المنتجات بصيغ مختلفة؟",
+                keywords: [
+                    { text: "استخدام تقنية Blocking (حصر المقارنة داخل نفس الفئة والماركة والنطاق السعري) لتقليل العمليات الحسابية", correct: true },
+                    { text: "حساب تشابه العناوين والمواصفات (Cosine Similarity / Embeddings) وتشابه الصور", correct: true },
+                    { text: "إعطاء الأولوية لـ Precision العالية لأن دمج منتجين مختلفين بالخطأ يضر العميل والبائع", correct: true },
+                    { text: "تطبيق نظام عتبات (فوق 95% دمج آلي، ومن 75% إلى 95% مراجعة بشرية)", correct: true },
+                    { text: "فخ خاطئ: مقارنة كل منتج بكل المنتجات في أمازون عشوائياً (O(N²)) بدون Blocking", correct: false },
+                    { text: "فخ خاطئ: دمج أي منتجين يتشاركان في كلمة واحدة مثل 'Apple' أو 'Black' تلقائياً", correct: false }
+                ]
+            },
+            {
+                id: "fc_biz4", subject: "BIZ", badge: "Business & Cases 4/6 (فيديو aoO_JbYLz1U)",
+                title: "4. إطار تحديد وترتيب مؤشرات الإدارة العليا (Executive Metrics & Amazon Flywheel)",
+                fullAnswer: `• كيف تجيب عن سؤال: "ما هي أهم 3 إلى 5 مؤشرات تختارها للـ Executive Dashboard لقطاع التجزئة أو Prime في أمازون وكيف ترتبها؟":
+  1. اربط المؤشرات بعجلة النمو في أمازون (Amazon Flywheel):
+     - تشكيلة أوسع (Selection: عدد المنتجات النشطة ونسبة توفر المخزون In-Stock Rate).
+     - أسعار تنافسية وتجربة شحن أسرع (Customer Experience: نسبة التوصيل في الموعد On-Time Delivery SLA).
+     - نمو الزيارات والاحتفاظ (Traffic & Retention: معدل تجديد Prime وتكرار الشراء Repeat Purchase Rate).
+     - المخرجات المالية النهائية (Output: صافي المبيعات GMS/GMV و Free Cash Flow).
+  2. قاعدتك الذهبية لاختيار 3 مؤشرات لأي منتج:
+     - مؤشر النجم القطبي (North Star Metric): يقيس القيمة النهائية للعميل والبيزنس معاً.
+     - مؤشر محرك استباقي (Leading / Input Metric): مثل نسبة التوصيل في نفس اليوم أو توفر المخزون.
+     - مؤشر حماية (Guardrail Metric): مثل نسبة المرتجعات أو شكاوى العملاء أو تكلفة الشحن للوحدة.`,
+                question: "يسألك المحاور: يريد مدير قطاع جديد في أمازون تحديد أهم 3 مؤشرات فقط لمتابعتها أسبوعياً. كيف تختارها وتربطها بعجلة نمو أمازون (Flywheel)؟",
+                keywords: [
+                    { text: "اختيار مؤشر مخرجات رئيسي (North Star Output) مثل صافي المبيعات (Net GMS) أو العملاء النشطين شهرياً", correct: true },
+                    { text: "اختيار مؤشر مدخلات قابل للتحكم (Controllable Input / Driver) مثل نسبة توفر المخزون أو سرعة الشحن", correct: true },
+                    { text: "اختيار مؤشر حماية وجودة (Guardrail Metric) مثل معدل المرتجعات أو تكلفة التوصيل لكل طلب", correct: true },
+                    { text: "تجنب مؤشرات الغرور (Vanity Metrics) مثل إجمالي التحميلات التاريخية التي لا تعكس الاستخدام الفعلي", correct: true },
+                    { text: "فخ خاطئ: اختيار 30 مؤشراً متشابهاً دون التمييز بين Input Metrics و Output Metrics", correct: false },
+                    { text: "فخ خاطئ: التركيز على رفع الإيرادات قصيرة الأجل على حساب رضا العميل وسرعة التوصيل", correct: false }
+                ]
+            },
+            {
+                id: "fc_biz5", subject: "BIZ", badge: "Business & Cases 5/6",
+                title: "5. تحسين أداء لوحات التحكم (Power BI / QuickSight) ومعادلات DAX",
+                fullAnswer: `• كيف تسرّع Dashboard بطيئة وتكتب معادلات تحليلية نظيفة؟
+  1. على مستوى البيانات (Data Model): تحويل الجداول إلى Star Schema، وحذف الأعمدة غير المستخدمة لتقليل حجم الـ RAM، وعمل التجميعات الثقيلة (Pre-aggregation) في طبقة SQL / Redshift قبل سحبها للـ Dashboard.
+  2. متى نختار Import Mode (أو SPICE في QuickSight) مقابل DirectQuery؟
+     - Import / SPICE: يخزن البيانات في ذاكرة سريعة جداً للاستجابة اللحظية (الأفضل لـ 95% من اللوحات).
+     - DirectQuery: يرسل استعلاماً حياً لقاعدة البيانات مع كل نقرة (نستخدمه فقط للبيانات اللحظية Real-time أو الجداول التي تتجاوز سعة الذاكرة).
+  3. في DAX: استخدام دالة CALCULATE لتغيير سياق الفلتر، ودالة DIVIDE(num, den, 0) الآمنة بدلاً من علامة القسمة /، وتجنب استخدام FILTER على جدول كامل عندما يكفي شرط عمود مباشر.`,
+                question: "يسألك المحاور: تشتكي الإدارة من أن لوحة التحكم تستغرق 45 ثانية للتحميل عند تغيير أي فلتر. كيف تشخص المشكلة وتسرّع اللوحة؟",
+                keywords: [
+                    { text: "نقل العمليات الحسابية والتجميعات الثقيلة إلى طبقة مستودع البيانات (SQL Views / Materialized Views)", correct: true },
+                    { text: "تحويل النموذج إلى Star Schema وحذف الأعمدة النصية الطويلة غير المستخدمة لتقليل حجم الذاكرة", correct: true },
+                    { text: "استخدام ذاكرة التخزين السريعة (SPICE في QuickSight أو Import Mode في Power BI) بدلاً من DirectQuery البطيء", correct: true },
+                    { text: "كتابة مقاييس DAX فعالة باستخدام CALCULATE و DIVIDE وتجنب مسح الجداول الضخمة صفاً بصف", correct: true },
+                    { text: "فخ خاطئ: سحب جدول خام يضم 500 مليون صف و120 عموداً مباشرة داخل واجهة الرسم البياني", correct: false },
+                    { text: "فخ خاطئ: عمل Joins معقدة بين 10 جداول نصية داخل واجهة الـ BI بدلاً من تجهيزها في الـ DWH", correct: false }
+                ]
+            },
+            {
+                id: "fc_biz6", subject: "BIZ", badge: "Business & Cases 6/6 (الرابط الرسمي)",
+                title: "6. مهارة الكتابة التقنية والمقايضات في أمازون (Amazon Narrative & Tradeoffs)",
+                fullAnswer: `• تشتهر أمازون بثقافة الوثائق المكتوبة (1-Pager / 6-Pager Narratives) بدلاً من عروض PowerPoint:
+  1. ابدأ بالخلاصة والتوصية التنفيذية في أول فقرة (Answer First / BLUF: Bottom Line Up Front) مدعومة بالأرقام.
+  2. وضح المقايضات الهندسية والتجارية بوضوح (Tradeoffs): مثلاً "الحل A يعطي بيانات لحظية لكنه يكلف 3 أضعاف، بينما الحل B يحدث كل ساعة بتكلفة أقل 70% ويلبي 99% من احتياج العمل — لذا نوصي بالحل B".
+  3. اذكر افتراضاتك وحدود البيانات (Limitations & Risks) بشفافية لكسب ثقة القارئ (Earn Trust).`,
+                question: "يسألك المحاور: بعد انتهائك من تحليل معقد، كيف تكتب ملخصاً تنفيذياً (Executive Summary) لقيادات أمازون وتشرح فيه المقايضات (Tradeoffs)؟",
+                keywords: [
+                    { text: "البدء بالخلاصة والتوصية العملية المحددة بالأرقام في أول فقرة (Answer First)", correct: true },
+                    { text: "توضيح المقايضات (Tradeoffs) بين الخيارات المتاحة من حيث التكلفة والسرعة والدقة", correct: true },
+                    { text: "ذكر قيود البيانات والافتراضات بشفافية تامة لتطبيق مبدأ Earn Trust", correct: true },
+                    { text: "ربط النتائج بخطوة عملية قابلة للتنفيذ (Actionable Next Steps) وتحديد المسؤول والجدول الزمني", correct: true },
+                    { text: "فخ خاطئ: كتابة 5 صفحات عن تفاصيل الكود البرمجي دون ذكر التوصية التجارية أو الأثر المالي", correct: false },
+                    { text: "فخ خاطئ: إخفاء عيوب الخيار المقترح أو تجاهل ذكر البدائل والمقايضات", correct: false }
+                ]
+            },
+
+            // ================= TAB 7: AMAZON LEADERSHIP PRINCIPLES - STAR STORIES (6 UNITS) =================
+            {
+                id: "fc_star1", subject: "STAR", badge: "قصة STAR 1/6 (Dive Deep & Deliver Results)",
+                title: "1. القصة الأولى (شركة أمان القابضة): التعمق في البيانات وأتمتة تقارير التحصيل والمبيعات",
+                fullAnswer: `• المبدأ القيادي: Dive Deep + Deliver Results + Invent and Simplify.
+• الموقف (Situation): أثناء عملي كمحلل بيانات في شركة أمان القابضة (Aman Holding)، كانت تقارير متابعة أداء الفروع والتحصيل المالي تُجمع يدوياً من عدة مصادر غير متطابقة، مما كان يستغرق ساعات طويلة يومياً ويؤخر اكتشاف فجوات التحصيل.
+• المهمة (Task): كان هدفي هو التحقيق في أسباب تضارب الأرقام بين الفروع والنظام المركزي، وبناء نظام تقارير مؤتمت وموحد يكشف الفجوات لحظياً للإدارة.
+• الإجراء (Action):
+  1. تعمقت في البيانات الخام (Dive Deep) وتتبعْت مسار المعاملات على مستوى الفرع والعميل، فاكتشفت أن بعض المرتجعات والدفعات الجزئية كانت تُسجل بتوقيت مختلف يسبب انحرافاً بنسبة 12% في التقارير اليدوية.
+  2. بنيت مسار تنظيف ودمج مؤتمت باستخدام SQL و Python (Pandas) لتوحيد الـ Grain ومعالجة القيم المفقودة والتكرارات تلقائياً.
+  3. صممت لوحة تحكم تفاعلية في Power BI تعرض مؤشرات التحصيل والمبيعات مع تنبيهات آلية للفروع المتأخرة.
+• النتيجة (Result): اختصرت وقت إعداد التقارير بنسبة 80% (من 4 ساعات يومياً إلى أقل من 30 دقيقة)، ورفعت دقة مطابقة البيانات إلى 99.8%، وساهمت التنبيهات المبكرة في تحسين سرعة التحصيل المالي للفروع بنسبة 18% خلال الربع الأول.`,
+                question: "يسألك المحاور: احكِ لي عن موقف تعمقت فيه في البيانات (Dive Deep) لحل مشكلة معقدة أو تضارب في الأرقام وحققت نتيجة ملموسة؟",
+                keywords: [
+                    { text: "الموقف والمهمة: تضارب أرقام الفروع وتأخر تقارير التحصيل اليدوية في شركة أمان القابضة", correct: true },
+                    { text: "التعمق (Dive Deep): تتبع المعاملات الخام واكتشاف سبب انحراف الـ 12% الناتج عن المرتجعات والدفعات الجزئية", correct: true },
+                    { text: "الحل الهندسي: أتمتة التنظيف والمطابقة بـ SQL و Python وبناء لوحة تحكم Power BI بتنبيهات آلية", correct: true },
+                    { text: "الأرقام والنتيجة: تقليل وقت التقارير 80%، رفع دقة المطابقة لـ 99.8%، وتحسين التحصيل بنسبة 18%", correct: true },
+                    { text: "فخ خاطئ: التحدث بصيغة الجمع 'نحن فعلنا' طوال القصة دون توضيح دورك الشخصي المباشر", correct: false },
+                    { text: "فخ خاطئ: إنهاء القصة بدون ذكر أي أرقام أو نسب مئوية للأثر النهائي", correct: false }
+                ]
+            },
+            {
+                id: "fc_star2", subject: "STAR", badge: "قصة STAR 2/6 (Invent and Simplify & Bias for Action)",
+                title: "2. القصة الثانية (شركة خزنة Fintech): ابتكار وتبسيط خطوط البيانات والتحليل التجاري",
+                fullAnswer: `• المبدأ القيادي: Invent and Simplify + Bias for Action.
+• الموقف (Situation): خلال عملي كمحلل بيانات في شركة خزنة (Khazna Fintech)، كان فريق الاستراتيجية التجارية والتسويق يحتاج لتحليل سلوك شرائح المستخدمين ومعدلات الاحتفاظ (Retention) بسرعة لإطلاق حملات مالية مخصصة، لكن استخراج البيانات كان يتطلب كتابة استعلامات يدوية متكررة تستغرق يومين لكل طلب.
+• المهمة (Task): ابتكار حل يبسط الوصول للبيانات ويمكّن فرق العمل من اتخاذ قرارات يومية سريعة دون انتظار الدعم التقني في كل مرة.
+• الإجراء (Action):
+  1. بادرت (Bias for Action) بتصميم طبقة جداول تحليلية مجمعة وموحدة في SQL باستخدام دوال النوافذ (LAG, DENSE_RANK, Cohort Analysis) لتجهيز مؤشرات الاحتفاظ وتكرار الاستخدام تلقائياً.
+  2. بنيت قوالب أتمتة بـ Python وربطتها بلوحات Looker Studio / Power BI ذاتية الخدمة (Self-Service Analytics) تتيح لفريق البيزنس فلترة الشرائح بأمان.
+• النتيجة (Result): خفضت زمن تلبية طلبات التحليل العاجلة (Ad-hoc Requests) بنسبة 75% (من يومين إلى أقل من ساعتين)، مما وفّر نحو 15 ساعة أسبوعياً لفريق البيانات، وساعد في رفع معدل تحويل الحملات المستهدفة بنسبة 22%.`,
+                question: "يسألك المحاور: احكِ لي عن مرة ابتكرت فيها طريقة جديدة لتبسيط عملية معقدة (Invent and Simplify) أو تحركت بسرعة (Bias for Action) لدعم البيزنس؟",
+                keywords: [
+                    { text: "الموقف: بطء استخراج تحليلات شرائح المستخدمين والـ Retention في شركة خزنة (يومان لكل طلب)", correct: true },
+                    { text: "المبادرة والتبسيط: بناء طبقة جداول تحليلية جاهزة بـ SQL Window Functions وقوالب Python مؤتمتة", correct: true },
+                    { text: "تمكين الفريق: تحويل التقارير إلى لوحات Self-Service BI يفلترها فريق البيزنس مباشرة", correct: true },
+                    { text: "النتيجة الرقمية: خفض وقت الطلبات 75%، توفير 15 ساعة أسبوعياً، ورفع تحويل الحملات 22%", correct: true },
+                    { text: "فخ خاطئ: انتظار طلب رسمي من المدير لعدة أشهر قبل التفكير في أتمتة العمل اليدوي المتكرر", correct: false },
+                    { text: "فخ خاطئ: بناء نظام معقد جداً لا يستطيع أحد في الفريق استخدامه أو صيانته بعدك", correct: false }
+                ]
+            },
+            {
+                id: "fc_star3", subject: "STAR", badge: "قصة STAR 3/6 (Customer Obsession & Ownership)",
+                title: "3. القصة الثالثة (شركة توصيات المتميز): الهوس بالعميل والملكية الكاملة لتقارير المحافظ",
+                fullAnswer: `• المبدأ القيادي: Customer Obsession + Ownership.
+• الموقف (Situation): أثناء عملي كمدير للبيانات والعمليات في شركة توصيات المتميز لتحليل البيانات (السوق السعودي والأمريكي)، لاحظت من خلال متابعة تذاكر الدعم أن العملاء النشطين يجدون صعوبة في فهم تقارير أداء المحافظ اليومية ويتأخرون في اتخاذ قراراتهم بسبب كثرة الجداول الخام.
+• المهمة (Task): تحملت المسؤولية الكاملة (Ownership) لإعادة هندسة تجربة تقارير العملاء من الصفر بحيث تبدأ من احتياج العميل الفعلي وتصل في موعد ثابت بدقة 100%.
+• الإجراء (Action):
+  1. جمعت ملاحظات العملاء وحللت أكثر الأسئلة تكراراً، ثم تعاونت مع فريقي (بما في ذلك الزميلة هدير في متابعة المحافظ) لتوحيد هيكل البيانات اليومي.
+  2. أعدت تصميم التقارير لتبرز المؤشرات الحاسمة بصرياً (صافي العائد، نسبة المخاطرة، ومستويات وقف الخسارة) مع أتمتة فحص جودة الأرقام قبل الإرسال اليومي.
+• النتيجة (Result): ارتفعت نسبة التزام تسليم التقارير اليومية في موعدها (SLA) إلى 100%، وانخفضت استفسارات وشكاوى العملاء حول قراءة التقارير بنسبة 65%، وارتفع معدل الاحتفاظ بالعملاء النشطين (Client Retention) بنسبة 25%.`,
+                question: "يسألك المحاور: احكِ لي عن موقف وضعت فيه العميل أولاً (Customer Obsession) أو تحملت فيه مسؤولية تتجاوز مهامك المباشرة (Ownership)؟",
+                keywords: [
+                    { text: "الانطلاق من العميل: رصد صعوبة قراءة العملاء لتقارير المحافظ اليومية في شركة توصيات المتميز", correct: true },
+                    { text: "تحمل الملكية (Ownership): قيادة مبادرة إعادة هيكلة التقارير وتوحيد مسار البيانات مع الفريق", correct: true },
+                    { text: "التبسيط البصري والجودة: إبراز مؤشرات العائد والمخاطرة بوضوح مع فحص آلي لدقة الأرقام", correct: true },
+                    { text: "النتيجة الرقمية: التزام SLA بنسبة 100%، خفض شكاوى واستفسارات العملاء 65%، ورفع الاحتفاظ 25%", correct: true },
+                    { text: "فخ خاطئ: القول بأن مشكلة فهم التقرير هي مسؤولية خدمة العملاء وليست مسؤولية محلل البيانات", correct: false },
+                    { text: "فخ خاطئ: إرسال بيانات خام للعملاء دون التحقق من سهولة قراءتها ودقتها", correct: false }
+                ]
+            },
+            {
+                id: "fc_star4", subject: "STAR", badge: "قصة STAR 4/6 (Have Backbone; Disagree & Commit + Earn Trust)",
+                title: "4. القصة الرابعة: معارضة قرار مبني على بيانات مضللة بالحجة الرقمية وبناء الثقة",
+                fullAnswer: `• المبدأ القيادي: Have Backbone; Disagree and Commit + Earn Trust.
+- الموقف (Situation): في أحد المشاريع التجارية، أراد فريق التسويق مضاعفة الميزانية الإعلانية لإحدى القنوات بناءً على تقرير أولي يظهر أن هذه القناة حققت أعلى إجمالي مبيعات ظاهري (Gross Sales).
+- المهمة (Task): لاحظت وجود خلل منهجي في طريقة حساب ذلك التقرير، وكان عليّ معارضة القرار المقترح باحترافية وتوضيح الحقيقة الرقمية للإدارة قبل إهدار الميزانية.
+- الإجراء (Action):
+  1. أجريت تحليلاً على مستوى الـ Cohort وصافي العائد بعد خصم المرتجعات وتكلفة الاستحواذ (CAC) والطلبات الملغاة، فتبين أن تلك القناة تجلب عملاء صائدي خصومات بمعدل إلغاء ومرتجعات يصل إلى 40%، وأن صافي ربحها الفعلي سالب!
+  2. عرضت الأرقام في وثيقة مقارنة واضحة (1-Pager) بدون توجيه لوم، واقترحت إعادة توجيه الميزانية نحو قناتين تحققان أعلى احتفاظ بالعملاء (LTV/CAC).
+- النتيجة (Result): اقتنعت الإدارة بالدليل الرقمي، وتم توفير نحو 30% من الميزانية التسويقية من الهدر، وارتفع العائد على الإنفاق الإعلاني (ROAS) بنسبة 28% في الشهر التالي.`,
+                question: "يسألك المحاور: احكِ لي عن موقف عارضت فيه مديرك أو فريقاً آخر (Have Backbone; Disagree and Commit) باستخدام البيانات، وكيف كسبت ثقتهم (Earn Trust)؟",
+                keywords: [
+                    { text: "الموقف: رغبة فريق التسويق في مضاعفة ميزانية قناة إعلانية بناءً على إجمالي المبيعات الظاهري فقط", correct: true },
+                    { text: "الفحص العميق: حساب صافي المبيعات بعد خصم المرتجعات (40%) وتكلفة الاستحواذ CAC والـ Retention", correct: true },
+                    { text: "أسلوب الاعتراض المهني: تقديم وثيقة مقايضات رقمية هادئة مع اقتراح قنوات بديلة ذات LTV أعلى", correct: true },
+                    { text: "النتيجة الرقمية: حماية 30% من الميزانية من الهدر ورفع العائد الإعلاني ROAS بنسبة 28%", correct: true },
+                    { text: "فخ خاطئ: الموافقة على التقرير الخاطئ مجاملةً للفريق وتجنباً للنقاش", correct: false },
+                    { text: "فخ خاطئ: مهاجمة الفريق شخصياً في الاجتماع دون تقديم بيانات بديلة أو حلول عملية", correct: false }
+                ]
+            },
+            {
+                id: "fc_star5", subject: "STAR", badge: "قصة STAR 5/6 (Failure Story & Insist on Highest Standards - فيديو L-WXnYv1to4)",
+                title: "5. القصة الخامسة (سؤال الفشل الحتمي Failure Story): خطأ تضاعف الصفوف (Fan-out) والدرس المستفاد",
+                fullAnswer: `• المبدأ القيادي: Earn Trust + Learn and Be Curious + Insist on the Highest Standards.
+- الموقف (Situation): في بداية بناء أحد تقارير المبيعات المجمعة، قمت بدمج جدول الطلبات الأساسي مع جدول سجلات الشحن والتتبع باستخدام LEFT JOIN لتسليم التقرير بسرعة قبل اجتماع صباحي عاجل.
+- المهمة (Task): بعد إرسال النسخة الأولية، لاحظت أثناء مراجعتي الذاتية أن إجمالي مبيعات بعض التجار الكبار يبدو أعلى من المعتاد بنحو 15%.
+- الإجراء (Action):
+  1. لم أنتظر اكتشاف الخطأ من الإدارة؛ فحصت الاستعلام فوراً فاكتشفت أن بعض الطلبات التي قُسمت إلى شحنتين تسببت في مضاعفة صف الطلب (Fan-out Trap 1-to-Many) أثناء الـ Join.
+  2. أرسلت تصحيحاً شفافاً خلال 20 دقيقة (Earn Trust)، وأصلحت الكود عبر تجميع جدول الشحن على مستوى order_id داخل CTE أولاً قبل الدمج.
+  3. وضعت قائمة فحص إلزامية (Automated Reconciliation Check) تقارن دائماً مجموع المبيعات قبل وبعد أي Join في كل استعلامات الفريق.
+- النتيجة (Result): منعت اتخاذ قرار تسعير خاطئ في الاجتماع، وأصبح فحص الـ Fan-out معياراً قياسياً في الفريق خفض أخطاء التقارير إلى 0% طوال العام.`,
+                question: "يسألك المحاور: احكِ لي عن مرة ارتكبت فيها خطأً تحليلياً أو فشلت في تسليم شيء كما يجب (Failure Story)، وكيف تعاملت مع الموقف وماذا غيرت بعده؟",
+                keywords: [
+                    { text: "الموقف والخطأ الصريح: حدوث Fan-out (مضاعفة بعض الصفوف بنسبة 15%) بسبب دمج جدول الطلبات مع الشحنات 1-to-Many", correct: true },
+                    { text: "الشفافية والسرعة (Earn Trust): اكتشاف الخطأ والاعتراف به فوراً وإرسال النسخة المصححة خلال 20 دقيقة", correct: true },
+                    { text: "الإصلاح الجذري: تجميع الجدول الفرعي على مستوى order_id داخل CTE قبل عمل LEFT JOIN", correct: true },
+                    { text: "الوقاية المستقبلية: بناء فحص آلي يقارن SUM(sales) و COUNT(*) قبل وبعد الـ Join لمنع تكرار الخطأ", correct: true },
+                    { text: "فخ خاطئ: الادعاء بأنك لم ترتكب أي خطأ في حياتك المهنية أبداً", correct: false },
+                    { text: "فخ خاطئ: إلقاء اللوم على مهندس البيانات أو زميل آخر دون تحمل المسؤولية", correct: false }
+                ]
+            },
+            {
+                id: "fc_star6", subject: "STAR", badge: "قصة STAR 6/6 (العمل ببيانات غير مكتملة 70% Rule + Why Amazon)",
+                title: "6. القصة السادسة (منصة Ninety Plus / مشاريع النمو): اتخاذ قرار ببيانات غير مكتملة + إجابة Why Amazon",
+                fullAnswer: `• المبدأ القيادي: Bias for Action (قاعدة 70% من البيانات) + Deliver Results + إجابة Why Amazon.
+- الموقف (Situation): عند إطلاق مسار تسويقي وتشخيصي جديد لمنصة Ninety Plus التعليمية، كنا نحتاج لتحديد أفضل هيكل لصفحة التشخيص وأوقات إرسال المتابعات الآلية، لكن لم تكن لدينا بيانات تاريخية كافية عن سلوك هذه الشريحة الجديدة.
+- المهمة (Task): اتخاذ قرار سريع بالإطلاق دون التوقف لأسابيع في انتظار بيانات مثالية، مع تقليل المخاطر لأدنى حد.
+- الإجراء (Action):
+  1. طبقت قاعدة أمازون (اتخاذ القرار عند توفر 70% من المعلومات) بالاعتماد على بيانات تقريبية (Proxy Data) من حملات سابقة لتحليل نقاط التسرب في الـ Funnel.
+  2. صممت إطلاقاً تدريجياً (A/B Pilot) مع تتبع لحظي لمؤشرات التحويل وبناء سكربتات أتمتة لالتقاط العملاء المحتملين وتصنيفهم.
+- النتيجة (Result): نجحنا في الوصول لهدف توليد العملاء المحتملين اليومي منذ الأسبوع الأول، وارتفع معدل التحويل من الاختبار التشخيصي للاشتراك بنسبة 35%.
+- إجابة سؤال Why Amazon BIE؟: لأن أمازون هي أكثر شركة في العالم تدار بالبيانات (Data-Driven Flywheel)، ودور الـ BIE فيها يجمع بين شغفي الأساسي في الهندسة التحليلية (SQL/Python/DWH) والتأثير المباشر في قرارات المنتج والعميل على نطاق ملايين المستخدمين.`,
+                question: "يسألك المحاور: احكِ لي عن موقف اضطررت فيه لاتخاذ قرار سريع ببيانات ناقصة أو غامضة (Ambiguity)، ولماذا تريد العمل كـ BIE في أمازون تحديداً؟",
+                keywords: [
+                    { text: "التعامل مع الغموض: استخدام Proxy Data وتطبيق قاعدة 70% للتحرك السريع بدلاً من الشلل التحليلي", correct: true },
+                    { text: "تقليل المخاطرة: إطلاق التجربة على نطاق مصغر (Pilot / A/B Test) مع وضع Guardrail Metrics", correct: true },
+                    { text: "النتيجة: تحقيق مستهدفات النمو المبكرة ورفع معدل التحويل بنسبة 35% بناءً على البيانات الفعلية", correct: true },
+                    { text: "Why Amazon: العمل على نطاق بيانات ضخم يربط بين SQL/Python/DWH وبين الأثر المباشر على العميل (Customer Obsession)", correct: true },
+                    { text: "فخ خاطئ: تأجيل المشروع 6 أشهر كاملة حتى تتوفر بيانات مثالية بنسبة 100%", correct: false },
+                    { text: "فخ خاطئ: اتخاذ قرار عشوائي بالحدس الشخصي ورفض قياس النتائج بعد الإطلاق", correct: false }
+                ]
+            }
+        ];
+
+        // =========================================================================
+        // 2. STATE MANAGEMENT & LOCALSTORAGE
+        // =========================================================================
+        const STORAGE_KEY = 'amazon_bie_modular_v3';
+        let appState = {
+            mastered: {},
+            retryQueue: {},
+            cardShowLearn: {},
+            cardSelections: {}
+        };
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    appState.mastered = parsed.mastered || {};
+                    appState.retryQueue = parsed.retryQueue || {};
+                }
+            } catch (e) {
+                console.warn('Storage load error:', e);
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    mastered: appState.mastered,
+                    retryQueue: appState.retryQueue
+                }));
+            } catch (e) {
+                console.warn('Storage save error:', e);
+            }
+            updateMasteryUI();
+        }
+
+        function getTotalItemsCount() {
+            return microDrills.length + coldWriteTemplates.length + scenarioFlashcards.length;
+        }
+
+        function updateMasteryUI() {
+            const total = getTotalItemsCount();
+            const masteredCount = Object.keys(appState.mastered).filter(k => appState.mastered[k] && !appState.retryQueue[k]).length;
+            const retryCount = Object.keys(appState.retryQueue).filter(k => appState.retryQueue[k]).length;
+            const pct = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+
+            const pctEl = document.getElementById('mastery-percent');
+            const cntEl = document.getElementById('mastery-counts');
+            const barEl = document.getElementById('mastery-bar');
+            const rBadge = document.getElementById('retry-badge');
+            const navRBadge = document.getElementById('nav-retry-count');
+
+            if (pctEl) pctEl.textContent = pct + '%';
+            if (cntEl) cntEl.textContent = `(${masteredCount}/${total})`;
+            if (barEl) barEl.style.width = pct + '%';
+            if (rBadge) rBadge.textContent = retryCount;
+            if (navRBadge) navRBadge.textContent = retryCount;
+        }
+
+        function markMastered(id) {
+            if (appState.retryQueue[id]) {
+                showToast('هذا السؤال في طابور الإعادة! افتح تبويب طابور الإعادة لتسميعه غيباً وتحريره.', 'warning');
+                return;
+            }
+            appState.mastered[id] = true;
+            saveState();
+        }
+
+        function addToRetryQueue(id, title, type) {
+            delete appState.mastered[id];
+            appState.retryQueue[id] = { id, title, type, addedAt: Date.now() };
+            saveState();
+            renderRetryQueue();
+            showToast('أُضيف السؤال إلى طابور الإعادة الذكي لتسمعه غيباً لاحقاً!', 'warning');
+        }
+
+        function confirmResetAll() {
+            appState = { mastered: {}, retryQueue: {}, cardShowLearn: {}, cardSelections: {} };
+            localStorage.removeItem(STORAGE_KEY);
+            closeResetModal();
+            renderAllSections();
+            updateMasteryUI();
+            showToast('تم تصفير التقدم بالكامل بنجاح!', 'info');
+        }
+
+        // =========================================================================
+        // 3. RENDER MICRO-DRILLS (PYTHON & SQL)
+        // =========================================================================
+        function renderMicroDrills() {
+            const pyContainer = document.getElementById('python-drills-container');
+            const sqlContainer = document.getElementById('sql-drills-container');
+            if (pyContainer) pyContainer.innerHTML = '';
+            if (sqlContainer) sqlContainer.innerHTML = '';
+
+            microDrills.forEach(d => {
+                const isMastered = appState.mastered[d.id] && !appState.retryQueue[d.id];
+                const inRetry = !!appState.retryQueue[d.id];
+                const badgeHtml = isMastered
+                    ? `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold">✅ متقن</span>`
+                    : (inRetry ? `<span class="px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[11px] font-bold">🚨 في طابور الإعادة</span>` : `<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[11px]">لم يُحل بعد</span>`);
+
+                const optsHtml = d.options.map(opt => {
+                    const safeOpt = opt.replace(/'/g, "\\'");
+                    return `<button type="button" onclick="fillMicroDrill('${d.id}', '${safeOpt}')" class="code-ltr px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-sky-300 transition">${opt}</button>`;
+                }).join('');
+
+                const card = document.createElement('div');
+                card.className = "bg-aws-panel border border-slate-800 rounded-2xl p-4 space-y-3 shadow-lg";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <h4 class="font-extrabold text-white text-xs sm:text-sm">${d.title}</h4>
+                        <div id="status-${d.id}">${badgeHtml}</div>
+                    </div>
+                    <p class="text-xs text-slate-300 leading-relaxed">${d.question}</p>
+                    <div class="code-ltr bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs flex flex-wrap items-center gap-1.5">
+                        <span class="text-slate-300">${d.codeBefore}</span>
+                        <input id="input-${d.id}" type="text" placeholder="اكتب أو اختر..." class="bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1 text-amber-300 font-bold focus:outline-none w-44 text-xs" />
+                        <span class="text-slate-300">${d.codeAfter}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 items-center">
+                        <span class="text-[11px] text-slate-400">اختيار سريع:</span>
+                        ${optsHtml}
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                        <button type="button" onclick="checkMicroDrill('${d.id}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition">تحقق من الإجابة</button>
+                        <button type="button" onclick="revealMicroDrill('${d.id}')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs transition">إظهار الحل (+طابور الإعادة)</button>
+                    </div>
+                    <div id="feedback-${d.id}" class="hidden text-xs p-2.5 rounded-xl"></div>
+                `;
+
+                if (d.subject === 'PYTHON' && pyContainer) pyContainer.appendChild(card);
+                if (d.subject === 'SQL' && sqlContainer) sqlContainer.appendChild(card);
+            });
+        }
+
+        function fillMicroDrill(id, val) {
+            const inp = document.getElementById('input-' + id);
+            if (inp) inp.value = val;
+            checkMicroDrill(id);
+        }
+
+        function normalizeStr(s) {
+            return (s || '').trim().replace(/\s+/g, ' ').replace(/"/g, "'").toLowerCase();
+        }
+
+        function checkMicroDrill(id) {
+            const d = microDrills.find(x => x.id === id);
+            const inp = document.getElementById('input-' + id);
+            const fb = document.getElementById('feedback-' + id);
+            if (!d || !inp || !fb) return;
+
+            const userVal = normalizeStr(inp.value);
+            const isCorrect = d.accepted.some(acc => normalizeStr(acc) === userVal);
+
+            fb.classList.remove('hidden');
+            if (isCorrect) {
+                fb.className = "text-xs p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200";
+                fb.innerHTML = `✅ <strong>إجابة صحيحة!</strong> ${d.explanation}`;
+                markMastered(id);
+                renderMicroDrills();
+            } else {
+                fb.className = "text-xs p-2.5 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200";
+                fb.innerHTML = `❌ <strong>حاول مرة أخرى!</strong> تأكد من كتابة المعامل الصحيح.`;
+            }
+        }
+
+        function revealMicroDrill(id) {
+            const d = microDrills.find(x => x.id === id);
+            const inp = document.getElementById('input-' + id);
+            const fb = document.getElementById('feedback-' + id);
+            if (!d || !inp || !fb) return;
+
+            inp.value = d.accepted[0];
+            fb.classList.remove('hidden');
+            fb.className = "text-xs p-2.5 rounded-xl bg-amber-950/80 border border-amber-500/40 text-amber-200";
+            fb.innerHTML = `💡 <strong>الحل الصحيح:</strong> <span class="inline-code">${d.accepted[0]}</span> — ${d.explanation}`;
+            addToRetryQueue(d.id, d.title, 'micro');
+            renderMicroDrills();
+        }
+
+        // =========================================================================
+        // 4. RENDER COLD-WRITE TEMPLATES (PYTHON & SQL)
+        // =========================================================================
+        let currentPyFilter = 'ALL';
+
+        function filterPythonCW(cat) {
+            currentPyFilter = cat;
+            document.querySelectorAll('.py-cw-btn').forEach(btn => {
+                if (btn.getAttribute('data-pycat') === cat) {
+                    btn.className = "py-cw-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-aws-orange text-slate-950";
+                } else {
+                    btn.className = "py-cw-btn px-3 py-1.5 rounded-xl text-xs font-extrabold bg-slate-800 text-slate-300";
+                }
+            });
+            renderColdWrites();
+        }
+
+        function renderColdWrites() {
+            const pyContainer = document.getElementById('python-cw-container');
+            const sqlContainer = document.getElementById('sql-cw-container');
+            if (pyContainer) pyContainer.innerHTML = '';
+            if (sqlContainer) sqlContainer.innerHTML = '';
+
+            coldWriteTemplates.forEach(cw => {
+                if (cw.subject === 'PYTHON' && currentPyFilter !== 'ALL' && cw.category !== currentPyFilter) {
+                    return;
+                }
+
+                const isMastered = appState.mastered[cw.id] && !appState.retryQueue[cw.id];
+                const inRetry = !!appState.retryQueue[cw.id];
+                const statusHtml = isMastered
+                    ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">✅ متقن</span>`
+                    : (inRetry ? `<span class="px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 text-xs font-bold">🚨 في طابور الإعادة</span>` : `<span class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 text-xs">جاهز للكتابة</span>`);
+
+                const hintsList = cw.hints.map(h => `<li class="code-ltr text-xs text-amber-300">${h}</li>`).join('');
+                const checksBadges = cw.checks.map((c, idx) => `
+                    <span id="chk-${cw.id}-${idx}" dir="ltr" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-400 text-xs font-mono">${c.label}</span>
+                `).join('');
+
+                const card = document.createElement('div');
+                card.className = "bg-aws-panel border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl";
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[11px] font-black">${cw.badge}</span>
+                            <h4 class="text-base font-black text-white mt-1">${cw.title}</h4>
+                        </div>
+                        <div>${statusHtml}</div>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">${cw.prompt}</p>
+                    <textarea id="cw-input-${cw.id}" rows="5" placeholder="اكتب الكود هنا..." class="code-ltr code-editor-area w-full bg-slate-950 border border-slate-700 focus:border-aws-orange rounded-2xl p-3.5 text-xs sm:text-sm text-emerald-300 focus:outline-none"></textarea>
+                    <div class="space-y-1.5">
+                        <div class="text-[11px] text-slate-400 font-bold">نقاط الفحص المطلوبة في الكود:</div>
+                        <div class="flex flex-wrap gap-2">${checksBadges}</div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <button type="button" onclick="checkColdWrite('${cw.id}')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition">فحص الكود الآن</button>
+                        <button type="button" onclick="toggleCwHint('${cw.id}')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 font-bold text-xs transition">💡 ذكرني بأسماء الدوال (بدون عقوبة)</button>
+                        <button type="button" onclick="revealColdWrite('${cw.id}')" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-bold text-xs transition">إظهار الحل الكامل (+طابور الإعادة)</button>
+                    </div>
+                    <div id="cw-hint-${cw.id}" class="hidden bg-slate-950 border border-sky-500/40 rounded-2xl p-3.5 space-y-1">
+                        <div class="text-xs font-bold text-sky-300">تذكير سريع بالدوال والمعاملات:</div>
+                        <ul class="list-disc pl-5 space-y-1">${hintsList}</ul>
+                    </div>
+                    <div id="cw-sol-${cw.id}" class="hidden bg-slate-950 border border-amber-500/40 rounded-2xl p-3.5 space-y-2">
+                        <div class="text-xs font-bold text-amber-300">الحل النموذجي الكامل:</div>
+                        <pre class="code-ltr text-xs text-emerald-300 overflow-x-auto"><code>${cw.solution}</code></pre>
+                    </div>
+                `;
+
+                if (cw.subject === 'PYTHON' && pyContainer) pyContainer.appendChild(card);
+                if (cw.subject === 'SQL' && sqlContainer) sqlContainer.appendChild(card);
+            });
+        }
+
+        function toggleCwHint(id) {
+            const el = document.getElementById('cw-hint-' + id);
+            if (el) el.classList.toggle('hidden');
+        }
+
+        function checkColdWrite(id) {
+            const cw = coldWriteTemplates.find(x => x.id === id);
+            const inp = document.getElementById('cw-input-' + id);
+            if (!cw || !inp) return;
+
+            const code = inp.value || '';
+            let allPassed = true;
+
+            cw.checks.forEach((chk, idx) => {
+                const badge = document.getElementById(`chk-${cw.id}-${idx}`);
+                const passed = chk.regex.test(code);
+                if (!passed) allPassed = false;
+                if (badge) {
+                    badge.className = passed
+                        ? "px-2.5 py-1 rounded-lg bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs font-mono font-bold"
+                        : "px-2.5 py-1 rounded-lg bg-red-950/70 border border-red-500/50 text-red-300 text-xs font-mono";
+                }
+            });
+
+            if (allPassed) {
+                showToast('أحسنت! جميع نقاط الفحص في الكود صحيحة 100%', 'success');
+                markMastered(cw.id);
+                renderColdWrites();
+            } else {
+                showToast('بعض عناصر الكود ناقصة (موضحة باللون الأحمر)', 'error');
+            }
+        }
+
+        function revealColdWrite(id) {
+            const cw = coldWriteTemplates.find(x => x.id === id);
+            const solEl = document.getElementById('cw-sol-' + id);
+            if (!cw || !solEl) return;
+            solEl.classList.remove('hidden');
+            addToRetryQueue(cw.id, cw.title, 'coldwrite');
+        }
+
+        // =========================================================================
+        // 5. RENDER SCENARIO FLASHCARDS (LEARN FIRST -> THEN TEST)
+        // =========================================================================
+        function renderFlashcards() {
+            const containers = {
+                DWH: document.getElementById('dwh-cards-container'),
+                STATS: document.getElementById('stats-cards-container'),
+                BIZ: document.getElementById('biz-cards-container'),
+                STAR: document.getElementById('star-cards-container')
+            };
+            Object.values(containers).forEach(c => { if (c) c.innerHTML = ''; });
+
+            scenarioFlashcards.forEach(fc => {
+                const container = containers[fc.subject];
+                if (!container) return;
+
+                const isMastered = appState.mastered[fc.id] && !appState.retryQueue[fc.id];
+                const inRetry = !!appState.retryQueue[fc.id];
+                const showLearn = appState.cardShowLearn[fc.id] !== false; // default true (الشرح يظهر أولاً)
+                const selectedSet = appState.cardSelections[fc.id] || {};
+
+                const statusHtml = isMastered
+                    ? `<span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">✅ متقن</span>`
+                    : (inRetry ? `<span class="px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 text-xs font-bold">🚨 في طابور الإعادة</span>` : `<span class="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 text-xs">اقرأ الشرح ثم اختبر فهمك</span>`);
+
+                const kwHtml = fc.keywords.map((kw, idx) => {
+                    const isSelected = !!selectedSet[idx];
+                    const cls = isSelected
+                        ? "border-aws-orange bg-aws-orange/15 text-white"
+                        : "border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700";
+                    return `
+                        <button type="button" onclick="toggleFcChoice('${fc.id}', ${idx})" id="fc-opt-${fc.id}-${idx}" class="w-full text-right p-3 rounded-xl border text-xs sm:text-sm font-semibold transition flex items-start gap-2.5 ${cls}">
+                            <span class="mt-0.5 text-aws-orange font-black">${isSelected ? '☑' : '☐'}</span>
+                            <span class="flex-1 leading-relaxed">${kw.text}</span>
+                        </button>
+                    `;
+                }).join('');
+
+                const card = document.createElement('div');
+                card.className = "bg-aws-panel border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl";
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black">${fc.badge}</span>
+                            <h3 class="text-base sm:text-lg font-black text-white mt-1">${fc.title}</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="toggleLearnPanel('${fc.id}')" class="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-sky-300 transition">
+                                ${showLearn ? '🙈 إخفاء الشرح للتسميع الغيبي' : '📖 إظهار صندوق الشرح التأسيسي'}
+                            </button>
+                            ${statusHtml}
+                        </div>
+                    </div>
+
+                    <!-- 1. Learn First Box -->
+                    <div id="learn-box-${fc.id}" class="${showLearn ? '' : 'hidden'} bg-slate-950 border-r-4 border-emerald-500 rounded-2xl p-4 space-y-2">
+                        <div class="text-xs font-black text-emerald-400">📖 أولاً: الشرح التأسيسي الكامل (افهم الفكرة بعمق قبل السؤال):</div>
+                        <div class="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line">${fc.fullAnswer}</div>
+                    </div>
+
+                    <!-- 2. Interviewer Question & 4-Point Comprehension Test -->
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+                        <div class="text-xs font-black text-aws-orange">🎯 ثانياً: سؤال المحاور واختبار الفهم (اختر الـ 4 نقاط الصحيحة وتجنب الفخين الخاطئين):</div>
+                        <p class="text-xs sm:text-sm font-bold text-white leading-relaxed">${fc.question}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+                            ${kwHtml}
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 pt-2">
+                            <button type="button" onclick="checkFlashcard('${fc.id}')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition">تحقق من اختياراتي (4 نقاط صحيحة)</button>
+                            <button type="button" onclick="revealFlashcard('${fc.id}')" class="px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-bold text-xs transition">تحديد الإجابات الصحيحة (+طابور الإعادة)</button>
+                        </div>
+                        <div id="fc-fb-${fc.id}" class="hidden text-xs p-3 rounded-xl"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleLearnPanel(id) {
+            const current = appState.cardShowLearn[id] !== false;
+            appState.cardShowLearn[id] = !current;
+            renderFlashcards();
+        }
+
+        function toggleFcChoice(id, idx) {
+            if (!appState.cardSelections[id]) appState.cardSelections[id] = {};
+            appState.cardSelections[id][idx] = !appState.cardSelections[id][idx];
+            renderFlashcards();
+        }
+
+        function checkFlashcard(id) {
+            const fc = scenarioFlashcards.find(x => x.id === id);
+            const fb = document.getElementById('fc-fb-' + id);
+            if (!fc || !fb) return;
+
+            const sel = appState.cardSelections[id] || {};
+            let allMatch = true;
+            fc.keywords.forEach((kw, idx) => {
+                const chosen = !!sel[idx];
+                if (chosen !== kw.correct) allMatch = false;
+            });
+
+            fb.classList.remove('hidden');
+            if (allMatch) {
+                fb.className = "text-xs p-3 rounded-xl bg-emerald-950 border border-emerald-500 text-emerald-200 font-bold";
+                fb.innerHTML = "✅ ممتاز! اخترت النقاط الـ 4 الصحيحة وتجنبت الفخاخ بالكامل.";
+                markMastered(fc.id);
+                setTimeout(() => renderFlashcards(), 600);
+            } else {
+                fb.className = "text-xs p-3 rounded-xl bg-red-950 border border-red-500 text-red-200 font-bold";
+                fb.innerHTML = "❌ تأكد من اختيار الـ 4 نقاط الصحيحة فقط وعدم اختيار أي عبارة تبدأ بـ (فخ خاطئ).";
+            }
+        }
+
+        function revealFlashcard(id) {
+            const fc = scenarioFlashcards.find(x => x.id === id);
+            if (!fc) return;
+            appState.cardSelections[id] = {};
+            fc.keywords.forEach((kw, idx) => {
+                if (kw.correct) appState.cardSelections[id][idx] = true;
+            });
+            appState.cardShowLearn[id] = true;
+            addToRetryQueue(fc.id, fc.title, 'flashcard');
+            renderFlashcards();
+        }
+
+        // =========================================================================
+        // 6. AUTO-RETRY QUEUE & COLD RETRY MODAL
+        // =========================================================================
+        function renderRetryQueue() {
+            const container = document.getElementById('retry-queue-container');
+            if (!container) return;
+
+            const items = Object.values(appState.retryQueue);
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-aws-panel border border-emerald-500/40 rounded-3xl p-8 text-center space-y-2">
+                        <div class="text-3xl">🎉</div>
+                        <h3 class="text-lg font-black text-emerald-400">طابور الإعادة فارغ تماماً!</h3>
+                        <p class="text-xs sm:text-sm text-slate-300">لا توجد لديك أي تمارين معلقة في طابور الإعادة حالياً.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="bg-aws-panel border border-red-500/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 text-[11px] font-black">يتطلب تسميعاً غيبياً بدون مساعدة</span>
+                        <h4 class="text-sm sm:text-base font-black text-white mt-1">${item.title}</h4>
+                    </div>
+                    <button type="button" onclick="openRetryModal('${item.id}')" class="px-4 py-2 rounded-xl bg-aws-orange hover:bg-amber-500 text-slate-950 font-black text-xs transition">
+                        🎯 ابدأ التسميع الغيبي الآن
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function openRetryModal(id) {
+            const item = appState.retryQueue[id];
+            const modal = document.getElementById('cold-retry-modal');
+            const titleEl = document.getElementById('modal-title');
+            const bodyEl = document.getElementById('modal-body');
+            if (!item || !modal || !titleEl || !bodyEl) return;
+
+            titleEl.textContent = item.title;
+            modal.classList.remove('hidden');
+
+            if (item.type === 'micro') {
+                const d = microDrills.find(x => x.id === id);
+                bodyEl.innerHTML = `
+                    <p class="text-xs sm:text-sm text-slate-200">${d.question}</p>
+                    <div class="code-ltr bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs flex flex-wrap items-center gap-1.5">
+                        <span>${d.codeBefore}</span>
+                        <input id="modal-micro-inp" type="text" placeholder="اكتب المعامل غيباً..." class="bg-slate-900 border border-aws-orange rounded-lg px-2.5 py-1 text-amber-300 font-bold w-48 text-xs" />
+                        <span>${d.codeAfter}</span>
+                    </div>
+                    <button type="button" onclick="submitModalRetry('${id}')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs">تحقق وحرر من الطابور</button>
+                `;
+            } else if (item.type === 'coldwrite') {
+                const cw = coldWriteTemplates.find(x => x.id === id);
+                bodyEl.innerHTML = `
+                    <p class="text-xs sm:text-sm text-slate-200">${cw.prompt}</p>
+                    <textarea id="modal-cw-inp" rows="6" placeholder="اكتب الكود غيباً بدون مساعدة..." class="code-ltr w-full bg-slate-950 border border-aws-orange rounded-2xl p-3.5 text-xs text-emerald-300"></textarea>
+                    <button type="button" onclick="submitModalRetry('${id}')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs">فحص الكود وتحريره من الطابور</button>
+                `;
+            } else if (item.type === 'flashcard') {
+                const fc = scenarioFlashcards.find(x => x.id === id);
+                appState.ModalFcSel = {};
+                const opts = fc.keywords.map((kw, idx) => `
+                    <label class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 cursor-pointer">
+                        <input type="checkbox" id="modal-fc-chk-${idx}" class="mt-1 accent-amber-500" />
+                        <span>${kw.text}</span>
+                    </label>
+                `).join('');
+                bodyEl.innerHTML = `
+                    <p class="text-xs sm:text-sm font-bold text-white">${fc.question}</p>
+                    <div class="grid grid-cols-1 gap-2">${opts}</div>
+                    <button type="button" onclick="submitModalRetry('${id}')" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs">تحقق من الـ 4 نقاط وحرر من الطابور</button>
+                `;
+            }
+        }
+
+        function closeRetryModal() {
+            const modal = document.getElementById('cold-retry-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function submitModalRetry(id) {
+            const item = appState.retryQueue[id];
+            if (!item) return;
+
+            let passed = false;
+            if (item.type === 'micro') {
+                const d = microDrills.find(x => x.id === id);
+                const val = normalizeStr(document.getElementById('modal-micro-inp')?.value);
+                passed = d.accepted.some(acc => normalizeStr(acc) === val);
+            } else if (item.type === 'coldwrite') {
+                const cw = coldWriteTemplates.find(x => x.id === id);
+                const code = document.getElementById('modal-cw-inp')?.value || '';
+                passed = cw.checks.every(chk => chk.regex.test(code));
+            } else if (item.type === 'flashcard') {
+                const fc = scenarioFlashcards.find(x => x.id === id);
+                passed = fc.keywords.every((kw, idx) => {
+                    const checked = !!document.getElementById(`modal-fc-chk-${idx}`)?.checked;
+                    return checked === kw.correct;
+                });
+            }
+
+            if (passed) {
+                delete appState.retryQueue[id];
+                appState.mastered[id] = true;
+                saveState();
+                closeRetryModal();
+                renderAllSections();
+                showToast('🎉 أحسنت! تم تحرير السؤال من طابور الإعادة وتسجيله كمتقن 100%', 'success');
+            } else {
+                showToast('الإجابة غير مكتملة بعد، راجع الشروط وحاول مرة أخرى!', 'error');
+            }
+        }
+
+        function renderAllSections() {
+            setLambdaState(1);
+            renderMicroDrills();
+            renderColdWrites();
+            renderFlashcards();
+            renderRetryQueue();
+            updateMasteryUI();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            renderAllSections();
+        });
+    </script>
+</body>
+</html>
